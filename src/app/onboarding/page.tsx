@@ -157,6 +157,15 @@ if record.move_type in ['out_invoice','out_refund'] and record.state == 'posted'
 
               <div style={card}>
                 <h4 style={{ margin: "0 0 6px" }}>③ Enter the connection — we verify it live against Zoho</h4>
+                <details style={{ margin: "4px 0 14px", fontSize: 12.5 }}>
+                  <summary style={{ cursor: "pointer", color: "#1F6FB2", fontWeight: 600 }}>🔍 Where do I find each value? (step-by-step)</summary>
+                  <div style={{ padding: "10px 12px", marginTop: 6, background: "#f7f9fc", border: "1px solid #e3e8ef", borderRadius: 8, color: "#33414f", lineHeight: 1.7 }}>
+                    <p style={{ margin: "0 0 6px" }}><b>Region</b> — your Zoho data center. For Saudi Arabia it&apos;s <code>sa</code> (your Zoho URL ends in <code>.sa</code>).</p>
+                    <p style={{ margin: "0 0 6px" }}><b>Organization ID</b> — in <b>Zoho Books → ⚙️ Settings → Organizations</b>: open your organization and the <b>Organization ID</b> (a long number) is shown there.</p>
+                    <p style={{ margin: "0 0 6px" }}><b>Client ID &amp; Client secret</b> — these come from the <b>Self Client</b> you created in step ②.1. Open it at <a href="https://api-console.zoho.sa" target="_blank" rel="noreferrer">api-console.zoho.sa</a> → your Self Client → <b>Client Secret</b> tab shows both.</p>
+                    <p style={{ margin: 0 }}><b>Refresh token</b> — in that same Self Client → <b>Generate Code</b> tab → enter scope <code>ZohoBooks.fullaccess.all</code> → <b>Create</b> to get a grant code (valid a few minutes) → exchange that code for a <b>refresh token</b> by POSTing to <code>https://accounts.zoho.sa/oauth/v2/token</code> with your client id/secret + the code. The refresh token is long-lived — paste it here. <i>(This is the most technical step; if you&apos;re stuck, use Help → Contact CBT.)</i></p>
+                  </div>
+                </details>
                 <form action={saveZohoConnection}>
                   <div style={row}>
                     <div style={{ flex: 1 }}><label style={label}>Region</label><p style={hint}>KSA = <code>sa</code>.</p><input style={input} name="zoho_region" defaultValue="sa" /></div>
@@ -178,7 +187,16 @@ if record.move_type in ['out_invoice','out_refund'] and record.state == 'posted'
             <>
               <div style={card}>
                 <h4 style={{ margin: "0 0 6px" }}>② Connect Odoo — we verify it live &amp; auto-create the ZATCA fields</h4>
-                <p style={hint}>Get an <b>API key</b> for a user with invoicing access: Odoo → user menu → My Profile → Account Security → New API Key. On <b>Test &amp; connect</b> we authenticate and auto-provision <code>x_zatca_uuid / status / qr_code / xml / error</code> on <code>account.move</code>.</p>
+                <p style={hint}>On <b>Test &amp; connect</b> we authenticate to Odoo and auto-provision <code>x_zatca_uuid / status / qr_code / xml / error</code> on <code>account.move</code>.</p>
+                <details style={{ margin: "8px 0 14px", fontSize: 12.5 }}>
+                  <summary style={{ cursor: "pointer", color: "#1F6FB2", fontWeight: 600 }}>🔍 Where do I find each value? (step-by-step)</summary>
+                  <div style={{ padding: "10px 12px", marginTop: 6, background: "#f7f9fc", border: "1px solid #e3e8ef", borderRadius: 8, color: "#33414f", lineHeight: 1.7 }}>
+                    <p style={{ margin: "0 0 6px" }}><b>Odoo URL</b> — the web address you use to open Odoo. Log into Odoo and copy it from your browser&apos;s address bar, e.g. <code>https://yourcompany.odoo.com</code> (just the domain, no page path).</p>
+                    <p style={{ margin: "0 0 6px" }}><b>Database</b> — on <b>Odoo Online</b> it&apos;s usually the word before <code>.odoo.com</code> (so <code>acme.odoo.com</code> → <code>acme</code>). Not sure? In Odoo go to <b>Settings → scroll to the bottom → &quot;Activate the developer mode&quot;</b>; the database name then appears in <b>Settings → Technical</b> and in the <b>⚙️ → About</b> dialog.</p>
+                    <p style={{ margin: "0 0 6px" }}><b>Username</b> — the <b>email</b> you log into Odoo with.</p>
+                    <p style={{ margin: 0 }}><b>Password / API key</b> — in Odoo, click your <b>profile photo (top-right) → My Profile</b> (or Preferences) → <b>Account Security</b> tab → <b>New API Key</b> → type your account password → name it &quot;ZATCA&quot; → <b>Generate</b> → copy the key. (Don&apos;t see &quot;Account Security&quot;? Turn on developer mode first, as above.) A password works too, but an API key is safer.</p>
+                  </div>
+                </details>
                 <form action={saveOdooConnection}>
                   <div style={row}>
                     <div style={{ flex: 1 }}><label style={label}>Odoo URL</label><p style={hint}>e.g. https://yourco.odoo.com</p><input style={input} name="odoo_url" placeholder="https://yourco.odoo.com" required /></div>
