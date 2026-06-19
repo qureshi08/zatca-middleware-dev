@@ -1,192 +1,100 @@
-'use client';
+import Link from "next/link";
+import { getActiveOrg } from "@/lib/org";
+import { supabaseAdmin } from "@/lib/supabase";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useApp } from '@/context/AppContext';
+type Inv = {
+  id: string;
+  invoice_number: string;
+  invoice_type: string;
+  document_type: string;
+  status: string;
+  total_amount: number | null;
+  zatca_status: string | null;
+  created_at: string;
+};
 
-function getDocType(inv: any): { label: string; pillClass: string } {
-    if (inv.documentType === '381' || inv.xml?.includes('InvoiceTypeCode>381'))
-        return { label: 'Credit Note', pillClass: 'pill-error' };
-    if (inv.documentType === '383' || inv.xml?.includes('InvoiceTypeCode>383'))
-        return { label: 'Debit Note', pillClass: 'pill-info' };
-    return { label: 'Tax Invoice', pillClass: 'pill-neutral' };
+function Pill({ s }: { s: string | null }) {
+  const v = (s || "").toUpperCase();
+  const map: Record<string, [string, string]> = {
+    CLEARED: ["#e6f6ec", "#1f9d57"],
+    REPORTED: ["#e7f0fb", "#1F6FB2"],
+    REJECTED: ["#fdeeea", "#c0392b"],
+    FAILED: ["#fdeeea", "#c0392b"],
+  };
+  const [bg, fg] = map[v] || ["#f3f0e6", "#c77700"];
+  return <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 12, fontWeight: 600, background: bg, color: fg }}>{v || "PENDING"}</span>;
 }
 
-function getStatus(inv: any): { label: string; pillClass: string } {
-    const s = inv.zatcaStatus;
-    if (s === 'CLEARED' || s === 'REPORTED') return { label: s, pillClass: 'pill-success' };
-    if (s === 'WARNING') return { label: 'WARNING', pillClass: 'pill-warning' };
-    if (s === 'REJECTED') return { label: 'REJECTED', pillClass: 'pill-error' };
-    return { label: 'PENDING', pillClass: 'pill-neutral' };
-}
+export default async function InvoicesPage() {
+  const org = await getActiveOrg();
+  const { data } = org
+    ? await supabaseAdmin
+        .from("invoices")
+        .select("id,invoice_number,invoice_type,document_type,status,total_amount,zatca_status,created_at")
+        .eq("organization_id", org.id)
+        .order("created_at", { ascending: false })
+        .limit(200)
+    : { data: [] as Inv[] };
+  const rows = (data ?? []) as Inv[];
 
-export default function InvoicesPage() {
-    const router = useRouter();
-    const { activeBank, isLoading: contextLoading } = useApp();
-    const [invoices, setInvoices] = useState<any[]>([]);
-    const [filter, setFilter] = useState('ALL');
-    const [search, setSearch] = useState('');
+  const count = (f: (i: Inv) => boolean) => rows.filter(f).length;
+  const kpis = [
+    { l: "Total", n: rows.length, c: "#155a93" },
+    { l: "Cleared", n: count((i) => i.zatca_status === "CLEARED"), c: "#1f9d57" },
+    { l: "Reported", n: count((i) => i.zatca_status === "REPORTED"), c: "#1F6FB2" },
+    { l: "Failed", n: count((i) => ["REJECTED", "FAILED"].includes((i.zatca_status || "").toUpperCase())), c: "#c0392b" },
+  ];
 
-    useEffect(() => {
-        if (contextLoading) return;
-        if (!activeBank) {
-            router.push('/login');
-            return;
-        }
-        const stored = JSON.parse(localStorage.getItem('invoices') || '[]');
-        setInvoices(stored.reverse());
-    }, [contextLoading, activeBank, router]);
+  return (
+    <div style={{ padding: "28px 32px", maxWidth: 1000 }}>
+      <h1 style={{ color: "#155a93", fontSize: 22, margin: 0 }}>Invoices</h1>
+      <p style={{ color: "#6b7785", fontSize: 13, marginTop: 4 }}>Every invoice processed for {org?.name ?? "your business"} — Demo (ZATCA simulation).</p>
 
-    const filtered = invoices
-        .filter(inv => {
-            if (filter === 'ALL') return true;
-            if (filter === 'CLEARED') return ['CLEARED', 'REPORTED', 'WARNING'].includes(inv.zatcaStatus);
-            if (filter === 'REJECTED') return inv.zatcaStatus === 'REJECTED';
-            if (filter === 'PENDING') return !inv.zatcaStatus || inv.zatcaStatus === 'PENDING';
-            if (filter === 'CREDIT') return inv.documentType === '381' || inv.xml?.includes('InvoiceTypeCode>381');
-            if (filter === 'DEBIT') return inv.documentType === '383' || inv.xml?.includes('InvoiceTypeCode>383');
-            return true;
-        })
-        .filter(inv =>
-            !search || inv.id?.toLowerCase().includes(search.toLowerCase()) ||
-            inv.buyer?.toLowerCase().includes(search.toLowerCase())
-        );
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, margin: "16px 0" }}>
+        {kpis.map((k) => (
+          <div key={k.l} style={{ background: "#fff", border: "1px solid #e3e8ef", borderRadius: 10, padding: "16px 18px" }}>
+            <div style={{ fontSize: 26, fontWeight: 700, color: k.c }}>{k.n}</div>
+            <div style={{ color: "#6b7785", fontSize: 12 }}>{k.l}</div>
+          </div>
+        ))}
+      </div>
 
-    const stats = {
-        total: invoices.length,
-        cleared: invoices.filter(i => ['CLEARED', 'REPORTED', 'WARNING'].includes(i.zatcaStatus)).length,
-        rejected: invoices.filter(i => i.zatcaStatus === 'REJECTED').length,
-        pending: invoices.filter(i => !i.zatcaStatus || i.zatcaStatus === 'PENDING').length,
-    };
-
-    return (
-        <div className="page-content animate-in">
-
-            {/* Page Header */}
-            <div className="section-header" style={{ marginBottom: '28px' }}>
-                <div>
-                    <h1 style={{ marginBottom: '6px' }}>Invoice Registry</h1>
-                    <p style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                        Audit trail of all ZATCA-submitted B2B tax instruments, credit and debit notes.
-                    </p>
-                </div>
-            </div>
-
-            {/* Stats Row */}
-            <div className="grid-4" style={{ marginBottom: '24px' }}>
-                {[
-                    { label: 'Total', value: stats.total, pillClass: 'pill-neutral' },
-                    { label: 'Cleared', value: stats.cleared, pillClass: 'pill-success' },
-                    { label: 'Rejected', value: stats.rejected, pillClass: 'pill-error' },
-                    { label: 'Pending', value: stats.pending, pillClass: 'pill-warning' },
-                ].map(s => (
-                    <div key={s.label} className="stat-card">
-                        <div className="stat-label">{s.label}</div>
-                        <div className="stat-value" style={{ fontSize: '28px' }}>{s.value}</div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Filters */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-                {['ALL', 'CLEARED', 'REJECTED', 'PENDING', 'CREDIT', 'DEBIT'].map(f => (
-                    <button
-                        key={f}
-                        onClick={() => setFilter(f)}
-                        className={filter === f ? 'btn-primary btn-sm' : 'btn-secondary btn-sm'}
-                    >
-                        {f}
-                    </button>
-                ))}
-                <div style={{ marginLeft: 'auto' }}>
-                    <input
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        placeholder="Search by ID or Buyer..."
-                        className="form-input"
-                        style={{ width: '240px', fontSize: '12px', padding: '7px 12px' }}
-                    />
-                </div>
-            </div>
-
-            {/* Table */}
-            <div className="card" style={{ overflow: 'hidden' }}>
-                {filtered.length === 0 ? (
-                    <div style={{ padding: '4rem', textAlign: 'center' }}>
-                        <div style={{ fontSize: '2rem', opacity: 0.15, marginBottom: '12px' }}>🧾</div>
-                        <p style={{ color: 'var(--text-tertiary)', fontSize: '14px' }}>No invoices match your filter.</p>
-                    </div>
-                ) : (
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Reference ID</th>
-                                <th>Type</th>
-                                <th>Date</th>
-                                <th>Buyer</th>
-                                <th style={{ textAlign: 'right' }}>Total (SAR)</th>
-                                <th style={{ textAlign: 'right' }}>VAT (15%)</th>
-                                <th style={{ textAlign: 'center' }}>ZATCA Status</th>
-                                <th style={{ textAlign: 'right' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filtered.map((inv) => {
-                                const doc = getDocType(inv);
-                                const status = getStatus(inv);
-                                return (
-                                    <tr key={inv.uuid}>
-                                        <td>
-                                            <Link href={`/invoices/${inv.uuid}`}
-                                                style={{ color: '#93C5FD', fontWeight: 600, textDecoration: 'none', fontFamily: 'JetBrains Mono, monospace', fontSize: '12px' }}>
-                                                {inv.id}
-                                            </Link>
-                                        </td>
-                                        <td>
-                                            <span className={`pill ${doc.pillClass}`}>{doc.label}</span>
-                                        </td>
-                                        <td style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '12px' }}>
-                                            {inv.date || inv.issueDate}
-                                        </td>
-                                        <td style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
-                                            {inv.buyer}
-                                        </td>
-                                        <td style={{ textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontSize: '12px', color: 'var(--text-primary)', fontWeight: 600 }}>
-                                            {(Number(inv.total) || 0).toFixed(2)}
-                                        </td>
-                                        <td style={{ textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontSize: '12px', color: 'var(--text-tertiary)' }}>
-                                            {(Number(inv.vatAmount) || 0).toFixed(2)}
-                                        </td>
-                                        <td style={{ textAlign: 'center' }}>
-                                            <span className={`pill ${status.pillClass}`}>{status.label}</span>
-                                        </td>
-                                        <td style={{ textAlign: 'right' }}>
-                                            <Link href={`/invoices/${inv.uuid}`} className="btn-ghost btn-sm">
-                                                View →
-                                            </Link>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colSpan={4} style={{ color: 'var(--text-tertiary)', fontSize: '12px' }}>
-                                    {filtered.length} record{filtered.length !== 1 ? 's' : ''}
-                                </td>
-                                <td style={{ textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', color: 'var(--text-primary)', fontWeight: 700 }}>
-                                    {filtered.reduce((s, i) => s + (Number(i.total) || 0), 0).toFixed(2)}
-                                </td>
-                                <td style={{ textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', color: 'var(--text-tertiary)' }}>
-                                    {filtered.reduce((s, i) => s + (Number(i.vatAmount) || 0), 0).toFixed(2)}
-                                </td>
-                                <td colSpan={2} />
-                            </tr>
-                        </tfoot>
-                    </table>
-                )}
-            </div>
-        </div>
-    );
+      <div style={{ background: "#fff", border: "1px solid #e3e8ef", borderRadius: 10, overflow: "hidden" }}>
+        {rows.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "48px 20px", color: "#8a97a6" }}>
+            <div style={{ fontSize: 34 }}>🧾</div>
+            <p style={{ marginTop: 8 }}>No invoices yet.</p>
+            <p style={{ fontSize: 13 }}>Post an invoice in your accounting software, or <Link href="/onboarding">send a test invoice →</Link></p>
+          </div>
+        ) : (
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr style={{ textAlign: "left", color: "#6b7785", fontSize: 11.5, textTransform: "uppercase" }}>
+                <th style={{ padding: "10px 14px", borderBottom: "1px solid #e3e8ef" }}>Invoice</th>
+                <th style={{ padding: "10px 14px", borderBottom: "1px solid #e3e8ef" }}>Type</th>
+                <th style={{ padding: "10px 14px", borderBottom: "1px solid #e3e8ef" }}>Doc</th>
+                <th style={{ padding: "10px 14px", borderBottom: "1px solid #e3e8ef" }}>Amount</th>
+                <th style={{ padding: "10px 14px", borderBottom: "1px solid #e3e8ef" }}>ZATCA</th>
+                <th style={{ padding: "10px 14px", borderBottom: "1px solid #e3e8ef" }}>Date</th>
+                <th style={{ padding: "10px 14px", borderBottom: "1px solid #e3e8ef" }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((i) => (
+                <tr key={i.id}>
+                  <td style={{ padding: "10px 14px", borderBottom: "1px solid #f0f3f7", fontWeight: 500 }}>{i.invoice_number}</td>
+                  <td style={{ padding: "10px 14px", borderBottom: "1px solid #f0f3f7", textTransform: "capitalize" }}>{i.invoice_type}</td>
+                  <td style={{ padding: "10px 14px", borderBottom: "1px solid #f0f3f7" }}>{i.document_type}</td>
+                  <td style={{ padding: "10px 14px", borderBottom: "1px solid #f0f3f7" }}>SAR {Number(i.total_amount ?? 0).toLocaleString()}</td>
+                  <td style={{ padding: "10px 14px", borderBottom: "1px solid #f0f3f7" }}><Pill s={i.zatca_status} /></td>
+                  <td style={{ padding: "10px 14px", borderBottom: "1px solid #f0f3f7", color: "#6b7785" }}>{new Date(i.created_at).toLocaleDateString()}</td>
+                  <td style={{ padding: "10px 14px", borderBottom: "1px solid #f0f3f7" }}><Link href={`/invoices/${i.id}`} style={{ color: "#1F6FB2" }}>View</Link></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
 }

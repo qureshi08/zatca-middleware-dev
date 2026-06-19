@@ -7,6 +7,7 @@ const NAV = [
   { href: "/", label: "Dashboard" },
   { href: "/profile", label: "Business Profile" },
   { href: "/onboarding", label: "Onboarding" },
+  { href: "/invoices", label: "Invoices" },
 ];
 
 export default function Sidebar() {
