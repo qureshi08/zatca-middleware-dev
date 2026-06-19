@@ -24,9 +24,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body suppressHydrationWarning>
         <AppProvider>
           {user ? (
-            <div className="app-shell">
-              <Sidebar mode="unconfigured" />
-              <div className="main-content">{children}</div>
+            <div className="app-shell" style={{ display: "flex", minHeight: "100vh" }}>
+              <Sidebar />
+              <div className="main-content" style={{ flex: 1, minWidth: 0 }}>{children}</div>
             </div>
           ) : (
             <div className="main-content">{children}</div>
