@@ -42,3 +42,6 @@ Thumbs.db
 tmp/
 *.pdf
 scratch_*.js
+
+# runtime api trace log
+zatca-api-logs.json
