@@ -1,0 +1,292 @@
+@import "tailwindcss";
+
+/* 
+ ============================================================
+  Z3C COMPLIANCE — COMPACT PRO DESIGN SYSTEM v9.0
+  "Dense, Sharp, Efficient — The Pro Tool"
+ ============================================================
+*/
+
+:root {
+  /* ── Colors ── */
+  --bg: #ffffff;
+  --text-primary: #1d1d1f;
+  --text-secondary: #6e6e73;
+  --border: #e5e5e7;
+  --accent: #ea580c;
+  --bg-sidebar: #fbfbfd;
+
+  /* ── Spacing (4px/8px Grid) ── */
+  --s-1: 3px;
+  --s-2: 5px;
+  --s-3: 8px;
+  --s-4: 12px;
+  --s-5: 15px;
+  --s-6: 18px;
+  --s-section: 12px;
+  /* Ultimate Compact */
+
+  /* ── Radius & Shadows ── */
+  --radius-btn: 6px;
+  --radius-card: 10px;
+  --shadow-subtle: 0 1px 4px rgba(0, 0, 0, 0.03);
+
+  /* ── Typography (13px Pro Base) ── */
+  --font-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --fs-base: 13px;
+}
+
+/* ── Reset ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--bg);
+}
+
+body {
+  font-family: var(--font-base);
+  color: var(--text-primary);
+  font-size: var(--fs-base);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+/* ── Layout Shell ── */
+.app-shell {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 190px;
+  /* Narrow Pro Sidebar */
+  flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: var(--s-3);
+  height: 100%;
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #fff;
+}
+
+.container {
+  max-width: 980px;
+  /* Ultra-Tight Container */
+  margin: 0 auto;
+  padding: 0 var(--s-4);
+  width: 100%;
+}
+
+/* ── Typography Scale ── */
+h1,
+.h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-bottom: var(--s-1);
+  line-height: 1.1;
+}
+
+h2,
+.h2 {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: var(--s-1);
+  line-height: 1.1;
+}
+
+h3,
+.h3 {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  margin-bottom: 2px;
+}
+
+.text-small {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* ── Components ── */
+.btn-pro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0 var(--s-3);
+  border-radius: var(--radius-btn);
+  background: var(--accent);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none !important;
+  white-space: nowrap;
+}
+
+.btn-pro:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-pro:active {
+  transform: translateY(0);
+  scale: 0.98;
+}
+
+.btn-pro-secondary {
+  background: #fff;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.btn-pro-secondary:hover {
+  background: #f9f9fb;
+}
+
+.card-pro {
+  background: white;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-subtle);
+  padding: var(--s-3);
+  transition: border-color 0.2s ease;
+}
+
+.card-pro:hover {
+  border-color: #d1d1d6;
+}
+
+/* ── Sidebar Nav ── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  text-decoration: none !important;
+}
+
+.nav-item:hover {
+  background: #f2f2f7;
+  color: var(--text-primary);
+}
+
+.nav-item.active {
+  background: #fff;
+  color: var(--accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
+}
+
+.nav-label {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #aeaeb2;
+  margin-top: var(--s-3);
+  margin-bottom: var(--s-1);
+  padding-left: 10px;
+}
+
+/* ── Tables (High Density) ── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+th {
+  text-align: left;
+  padding: 8px 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  background: #fafafa;
+}
+
+td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #f2f2f7;
+  color: var(--text-primary);
+  height: 36px;
+  /* Ultra slim rows */
+}
+
+/* ── Forms (Nano) ── */
+.input-pro {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1.2px solid var(--border);
+  font-size: 12px;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+
+.input-pro:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.08);
+}
+
+/* ── Utilities ── */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.section-pro {
+  padding: var(--s-section) 0;
+}
+
+.gap-pro {
+  gap: var(--s-4);
+}
+
+.animate-pro {
+  animation: proFadeIn 0.2s ease-out;
+}
+
+@keyframes proFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

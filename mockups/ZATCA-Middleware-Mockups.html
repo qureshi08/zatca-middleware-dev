@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ZATCA Middleware — UI Mockups</title>
+<style>
+  :root{
+    --accent:#1F6FB2; --accent-dark:#155a93; --ink:#1f2933; --muted:#6b7785;
+    --line:#e3e8ef; --bg:#f4f7fb; --card:#fff; --ok:#1f9d57; --warn:#c77700;
+    --err:#c0392b; --testing:#8a5a00; --testing-bg:#fff6e0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);font-size:14px;line-height:1.5}
+  .layout{display:flex;min-height:100vh}
+  .sidebar{width:250px;background:#0f2233;color:#cdd8e3;flex-shrink:0;padding:0 0 40px}
+  .brand{padding:18px 20px;font-weight:700;color:#fff;font-size:15px;border-bottom:1px solid #1d3a52;letter-spacing:.02em}
+  .brand small{display:block;font-weight:400;color:#7d93a8;font-size:11px;margin-top:2px}
+  .nav-group{padding:14px 12px 2px;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:#5f7790}
+  .nav a{display:block;padding:7px 20px;color:#cdd8e3;text-decoration:none;font-size:13px;border-left:3px solid transparent;cursor:pointer}
+  .nav a:hover{background:#16293b;color:#fff}
+  .nav a.active{background:#16293b;color:#fff;border-left-color:var(--accent)}
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .topbar{background:var(--card);border-bottom:1px solid var(--line);padding:10px 24px;display:flex;align-items:center;gap:14px}
+  .topbar .crumb{color:var(--muted);font-size:13px}
+  .topbar .spacer{flex:1}
+  .badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600}
+  .badge.testing{background:var(--testing-bg);color:var(--testing);border:1px solid #f0d48a}
+  .badge.live{background:#e6f6ec;color:var(--ok);border:1px solid #b6e4c6}
+  .avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+  .content{padding:24px 28px;overflow:auto}
+  .screen{display:none;max-width:1000px} .screen.show{display:block}
+  h1{font-size:21px;margin:0 0 4px;color:var(--accent-dark)}
+  .sub{color:var(--muted);margin:0 0 18px;font-size:13px}
+  .testbanner{background:var(--testing-bg);border:1px solid #f0d48a;color:var(--testing);padding:9px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:flex;gap:8px;align-items:center}
+  .warnbanner{background:#fdeee9;border:1px solid #f0c0b3;color:var(--err);padding:9px 14px;border-radius:8px;font-size:13px;margin-bottom:16px}
+  .okbanner{background:#e9f8ef;border:1px solid #b6e4c6;color:var(--ok);padding:9px 14px;border-radius:8px;font-size:13px;margin:12px 0}
+  .grid{display:grid;gap:14px}
+  .g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+  .kpi .n{font-size:26px;font-weight:700;color:var(--accent-dark)} .kpi .l{color:var(--muted);font-size:12px}
+  .card h3{margin:0 0 12px;font-size:15px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em}
+  tr:hover td{background:#fafcfe}
+  .pill{font-size:11px;padding:2px 8px;border-radius:12px;font-weight:600;display:inline-block}
+  .pill.cleared{background:#e6f6ec;color:var(--ok)} .pill.reported{background:#e7f0fb;color:var(--accent)}
+  .pill.failed{background:#fdeeea;color:var(--err)} .pill.pending{background:#f3f0e6;color:var(--warn)}
+  .btn{display:inline-block;background:var(--accent);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:13px;cursor:pointer;text-decoration:none;font-weight:500}
+  .btn:hover{background:var(--accent-dark)} .btn:disabled{background:#b9c6d4;cursor:not-allowed}
+  .btn.ghost{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  .btn.sm{padding:5px 10px;font-size:12px} .btn.gray{background:#eef2f6;color:#445}
+  label{display:block;font-size:12px;color:var(--muted);margin:12px 0 4px;font-weight:600}
+  input,select,textarea{width:100%;padding:8px 10px;border:1px solid #cfd8e3;border-radius:7px;font-size:13px;font-family:inherit}
+  .row{display:flex;gap:14px} .row>*{flex:1}
+  code,.mono{font-family:Consolas,monospace;font-size:12px}
+  .copybox{background:#0f2233;color:#cfe3f5;padding:8px 12px;border-radius:7px;font-family:Consolas,monospace;font-size:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin:6px 0}
+  .copybox button{background:#1f3a52;color:#cfe3f5;border:none;border-radius:5px;padding:3px 9px;font-size:11px;cursor:pointer}
+  /* stepper */
+  .stepper{display:flex;gap:6px;margin:6px 0 20px;flex-wrap:wrap}
+  .step{flex:1;min-width:110px;padding:9px 8px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:12px;text-align:center;color:var(--muted);cursor:pointer;transition:.15s}
+  .step.done{border-color:#b6e4c6;background:#f1faf4;color:var(--ok)}
+  .step.active{border-color:var(--accent);background:#eef5fc;color:var(--accent-dark);font-weight:600;box-shadow:0 1px 4px rgba(31,111,178,.15)}
+  /* option cards */
+  .opt{cursor:pointer;border:2px solid var(--line);transition:.15s;position:relative}
+  .opt:hover{border-color:#9cc2e0}
+  .opt.selected{border-color:var(--accent);background:#f3f9ff}
+  .opt.selected::after{content:"✓";position:absolute;top:10px;right:12px;color:var(--accent);font-weight:700}
+  .opt h3{margin:0 0 6px}
+  .tabs{display:flex;gap:8px;margin-bottom:14px}
+  .tab{padding:7px 14px;border:1px solid var(--line);border-radius:7px 7px 0 0;background:#f2f5f9;cursor:pointer;font-size:13px}
+  .tab.active{background:#fff;border-bottom:2px solid var(--accent);font-weight:600;color:var(--accent-dark)}
+  ol.steps{padding-left:18px} ol.steps li{margin:8px 0}
+  .note{background:#f3f6fa;border-left:3px solid var(--accent);padding:8px 12px;font-size:12.5px;border-radius:0 6px 6px 0;margin:10px 0;color:#3a4a5a}
+  .opanel{display:none} .opanel.show{display:block}
+  .onav{display:flex;justify-content:space-between;margin-top:18px}
+  .hidden{display:none}
+  .mocknote{position:fixed;bottom:10px;right:12px;background:#0f2233;color:#9fb6cc;font-size:11px;padding:5px 10px;border-radius:6px;opacity:.85}
+  .spin{display:inline-block;width:12px;height:12px;border:2px solid #cfd8e3;border-top-color:var(--accent);border-radius:50%;animation:sp 0.7s linear infinite;vertical-align:-2px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">ZATCA Middleware <small>Convergent BT · UI Mockup</small></div>
+    <div class="nav" id="nav">
+      <div class="nav-group">Get started</div>
+      <a data-s="login">Login / Sign-up</a>
+      <a data-s="profile">Business Profile</a>
+      <a data-s="onboarding">Onboarding Wizard</a>
+      <div class="nav-group">Workspace</div>
+      <a data-s="dashboard" class="active">Dashboard</a>
+      <a data-s="invoices">Invoices</a>
+      <a data-s="invoice">Invoice Detail</a>
+      <a data-s="logs">Audit Logs</a>
+      <div class="nav-group">Settings</div>
+      <a data-s="set-connection">ERP Connection</a>
+      <a data-s="set-keys">API Keys</a>
+      <a data-s="set-team">Team Members</a>
+      <a data-s="set-golive">Demo / Real (Go Live)</a>
+      <a data-s="request-sw">Request Unlisted Software</a>
+      <div class="nav-group">Developer & Help</div>
+      <a data-s="dev-docs">API Docs & Guides</a>
+      <a data-s="help">Help / Support</a>
+      <div class="nav-group">CBT Admin (internal)</div>
+      <a data-s="admin-tenants">Tenants</a>
+      <a data-s="admin-tenant">Tenant Detail</a>
+      <a data-s="admin-requests">Software Requests</a>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <span class="crumb" id="crumb">Dashboard</span>
+      <span class="spacer"></span>
+      <span class="badge testing" id="envbadge">● Demo mode</span>
+      <span class="mono" style="font-size:12px;color:var(--muted)">Al-Noor Trading Co.</span>
+      <div class="avatar">AN</div>
+    </div>
+    <div class="content">
+
+      <!-- LOGIN -->
+      <section class="screen" id="login">
+        <div style="max-width:380px;margin:40px auto;text-align:center">
+          <h1 style="text-align:center">ZATCA Compliance Middleware</h1>
+          <p class="sub">Become and stay ZATCA-compliant — without leaving the software you already use.</p>
+          <div class="card" style="padding:28px">
+            <button class="btn" style="width:100%;background:#fff;color:#333;border:1px solid #cfd8e3" data-s="profile">🟦 &nbsp;Continue with Google</button>
+            <p class="sub" style="margin-top:14px;font-size:12px">New here? Signing in creates your account &amp; business profile automatically.</p>
+          </div>
+          <p class="sub" style="font-size:11px;margin-top:18px">Free · KSA · Phase-2 e-invoicing</p>
+        </div>
+      </section>
+
+      <!-- BUSINESS PROFILE -->
+      <section class="screen" id="profile">
+        <h1>Step 1 — Your business</h1>
+        <p class="sub">Your seller identity, used on every ZATCA invoice. Must match your ZATCA registration.</p>
+        <div class="card">
+          <div class="row"><div><label>Legal name (EN)</label><input value="Al-Noor Trading Co."></div><div><label>Legal name (AR)</label><input value="شركة النور للتجارة"></div></div>
+          <div class="row"><div><label>VAT registration number (15 digits)</label><input value="311111111100003"></div><div><label>CRN / Commercial reg. no.</label><input value="1010101010"></div></div>
+          <label>Registered address</label>
+          <div class="row"><div><input placeholder="Building no." value="1234"></div><div><input placeholder="Street" value="King Fahd Rd"></div><div><input placeholder="District" value="Al Olaya"></div></div>
+          <div class="row"><div><input placeholder="City" value="Riyadh"></div><div><input placeholder="Postal code" value="12211"></div><div><input placeholder="Country" value="Saudi Arabia"></div></div>
+          <div style="margin-top:16px"><button class="btn" data-s="onboarding">Save &amp; start onboarding →</button></div>
+        </div>
+      </section>
+
+      <!-- ONBOARDING WIZARD (single guided flow) -->
+      <section class="screen" id="onboarding">
+        <h1>Step 2 — Onboarding</h1>
+        <p class="sub" id="o-sub">One-time setup across three places: your accounting software, ZATCA's Fatoora portal, and here.</p>
+        <div class="stepper" id="ostepper">
+          <div class="step active" data-step="1">1 · Integration</div>
+          <div class="step" data-step="2">2 · Software setup</div>
+          <div class="step" data-step="3">3 · Connect</div>
+          <div class="step" data-step="4">4 · ZATCA</div>
+          <div class="step" data-step="5">5 · Test</div>
+        </div>
+
+        <!-- PANEL 1: choose -->
+        <div class="opanel show" data-step="1">
+          <h3 style="margin:0 0 10px">How do you create invoices?</h3>
+          <div class="grid g3">
+            <div class="card opt" data-erp="odoo"><h3>🟢 Odoo</h3><p class="sub" style="margin:0">Connect your Odoo instance via JSON-RPC.</p></div>
+            <div class="card opt" data-erp="zoho"><h3>🔵 Zoho Books</h3><p class="sub" style="margin:0">Connect Zoho Books via secure OAuth.</p></div>
+            <div class="card opt" data-erp="custom"><h3>⚙️ Custom / Our API</h3><p class="sub" style="margin:0">Use our headless API from your own system.</p></div>
+          </div>
+          <div class="note">Don't see your software? <a data-s="request-sw" class="navlink">Request support →</a></div>
+        </div>
+
+        <!-- PANEL 2: erp-side setup -->
+        <div class="opanel" data-step="2">
+          <h3 id="erp2-title">Set up your accounting software</h3>
+          <p class="sub">Do this <b>inside <span class="erpname">your software</span></b>. Values below are pre-filled for your account.</p>
+          <div class="card erpblk" data-erp="zoho">
+            <ol class="steps">
+              <li><b>Create an OAuth Self-Client</b> in the Zoho API Console; copy Client ID &amp; Secret, generate a refresh token (scope <code>ZohoBooks.fullaccess.all</code>).</li>
+              <li><b>Create custom fields</b> on Invoices (Settings → Field Customization):
+                <div class="copybox"><span>cf_zatca_uuid · cf_zatca_status · cf_zatca_qr_code · cf_zatca_error</span><button class="copy">Copy</button></div></li>
+              <li><b>Create a Workflow webhook</b> (on invoice created/sent):
+                <div class="copybox"><span>https://app.cbt-zatca.com/api/zoho/webhook</span><button class="copy">Copy URL</button></div>
+                <div class="copybox"><span>x-api-key: sk_zatca_live_9f2a…c41</span><button class="copy">Copy key</button></div></li>
+            </ol>
+          </div>
+          <div class="card erpblk hidden" data-erp="odoo">
+            <ol class="steps">
+              <li><b>Enable the ZATCA fields</b> on <code>account.move</code> (we auto-provision <code>x_zatca_*</code> when you connect, or add manually):
+                <div class="copybox"><span>x_zatca_status · x_zatca_uuid · x_zatca_qr_code · x_zatca_xml · x_zatca_error</span><button class="copy">Copy</button></div></li>
+              <li><b>Create an Automation / webhook</b> (on invoice posted) calling:
+                <div class="copybox"><span>https://app.cbt-zatca.com/api/odoo/webhook</span><button class="copy">Copy URL</button></div>
+                <div class="copybox"><span>x-api-key: sk_zatca_live_9f2a…c41</span><button class="copy">Copy key</button></div></li>
+            </ol>
+          </div>
+          <div class="card erpblk hidden" data-erp="custom">
+            <p>No software-side setup. You'll call our API directly from your system.</p>
+            <div class="copybox"><span>POST https://app.cbt-zatca.com/api/v1/zatca/invoices/submit</span><button class="copy">Copy</button></div>
+            <div class="note">Full reference in <a data-s="dev-docs" class="navlink">API Docs &amp; Guides</a>.</div>
+          </div>
+        </div>
+
+        <!-- PANEL 3: connect -->
+        <div class="opanel" data-step="3">
+          <h3>Connect to the middleware</h3>
+          <div class="card erpblk" data-erp="zoho">
+            <div class="row"><div><label>Region</label><select><option>.sa (KSA)</option><option>.com</option></select></div><div><label>Organization ID</label><input value="8923000012"></div></div>
+            <div class="row"><div><label>Client ID</label><input value="1000.XXXX"></div><div><label>Client secret</label><input type="password" value="••••••"></div></div>
+            <label>Refresh token</label><input type="password" value="••••••••">
+            <div style="margin-top:14px;display:flex;gap:10px"><button class="btn ghost test-conn">Test connection</button><button class="btn gray verify-fields">Verify fields</button></div>
+            <div class="conn-result"></div>
+          </div>
+          <div class="card erpblk hidden" data-erp="odoo">
+            <div class="row"><div><label>Odoo URL</label><input value="https://al-noor.odoo.com"></div><div><label>Database</label><input value="al-noor"></div></div>
+            <div class="row"><div><label>Username</label><input value="api@al-noor.sa"></div><div><label>Password / API key</label><input type="password" value="••••••"></div></div>
+            <div style="margin-top:14px;display:flex;gap:10px"><button class="btn ghost test-conn">Test connection</button><button class="btn gray verify-fields">Provision x_zatca fields</button></div>
+            <div class="conn-result"></div>
+          </div>
+          <div class="card erpblk hidden" data-erp="custom">
+            <p>No connection needed — your system calls us. Here's your API key:</p>
+            <div class="copybox"><span>sk_zatca_live_9f2a8b71c4e2…c41</span><button class="copy">Copy</button></div>
+            <div class="note">Keep it secret. You can rotate it anytime in Settings → API Keys.</div>
+          </div>
+        </div>
+
+        <!-- PANEL 4: ZATCA -->
+        <div class="opanel" data-step="4">
+          <h3>ZATCA onboarding — Demo (simulation)</h3>
+          <div class="card">
+            <p><b>1. Get your OTP on ZATCA's Fatoora portal</b></p>
+            <ol class="steps"><li>Log in to <code>fatoora.zatca.gov.sa</code> → Onboard new solution → choose <b>Simulation</b>.</li><li>Copy the OTP and paste it below.</li></ol>
+            <label>OTP</label>
+            <div class="row" style="align-items:flex-end"><div><input id="otp" value="123456"></div><div style="flex:0 0 auto"><button class="btn" id="startZatca">Start onboarding</button></div></div>
+            <div id="zatcaProgress" class="hidden">
+              <h3 style="margin-top:18px">Progress</h3>
+              <div class="stepper" id="zsteps">
+                <div class="step" data-z="1">Keys + CSR</div><div class="step" data-z="2">Compliance CSID</div><div class="step" data-z="3">Compliance checks</div><div class="step" data-z="4">Production CSID</div>
+              </div>
+              <div class="okbanner hidden" id="zatcaDone">✓ Onboarded in testing mode. Certificates stored securely.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL 5: test -->
+        <div class="opanel" data-step="5">
+          <h3>Send a test invoice</h3>
+          <p class="sub">Prove the whole pipe works before you go live. Nothing is legally filed in testing mode.</p>
+          <div class="card">
+            <button class="btn" id="sendSample">Send sample invoice →</button>
+            <div id="sampleResult" class="hidden">
+              <table style="margin-top:16px"><thead><tr><th>Invoice</th><th>Type</th><th>Status</th><th>Result</th></tr></thead>
+                <tbody><tr><td>TEST-0001</td><td>Standard (B2B)</td><td><span class="pill cleared">Cleared</span></td><td><a class="navlink" data-s="invoice">View QR / XML →</a></td></tr></tbody></table>
+              <div class="okbanner">🎉 It works! You're set up in <b>Demo mode</b>. Switch to Real whenever you're ready.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="onav">
+          <button class="btn gray" id="oback" disabled>← Back</button>
+          <button class="btn" id="onext" disabled>Continue →</button>
+        </div>
+      </section>
+
+      <!-- DASHBOARD -->
+      <section class="screen show" id="dashboard">
+        <h1>Dashboard</h1>
+        <p class="sub">Al-Noor Trading Co. · <span class="erpname">Zoho Books</span> · last 30 days</p>
+        <div class="testbanner">⚠️ <b>Demo mode</b> — invoices go to ZATCA simulation and are <b>not legally filed</b>. <a data-s="set-golive" class="navlink" style="margin-left:6px">Switch to Real →</a></div>
+        <div class="warnbanner">🔑 Your testing certificate (CSID) expires in <b>11 days</b>. <a data-s="onboarding" class="navlink">Renew →</a></div>
+        <div class="grid g4">
+          <div class="card kpi"><div class="n">1,284</div><div class="l">Cleared (B2B)</div></div>
+          <div class="card kpi"><div class="n">3,902</div><div class="l">Reported (B2C)</div></div>
+          <div class="card kpi"><div class="n" style="color:var(--err)">7</div><div class="l">Failed</div></div>
+          <div class="card kpi"><div class="n">SAR 2.1M</div><div class="l">Invoiced volume</div></div>
+        </div>
+        <div class="card" style="margin-top:16px"><h3>Recent invoices</h3>
+          <table><thead><tr><th>Invoice</th><th>Customer</th><th>Type</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>
+            <tr><td>INV-10293</td><td>Gulf Cement LLC</td><td>Standard</td><td>SAR 12,400</td><td><span class="pill cleared">Cleared</span></td><td><a class="navlink" data-s="invoice">View</a></td></tr>
+            <tr><td>INV-10292</td><td>Walk-in</td><td>Simplified</td><td>SAR 230</td><td><span class="pill reported">Reported</span></td><td><a class="navlink" data-s="invoice">View</a></td></tr>
+            <tr><td>INV-10291</td><td>Reem Co.</td><td>Standard</td><td>SAR 8,900</td><td><span class="pill failed">Failed</span></td><td><a class="navlink" data-s="invoice">View</a></td></tr>
+          </tbody></table>
+        </div>
+      </section>
+
+      <!-- INVOICES -->
+      <section class="screen" id="invoices">
+        <h1>Invoices</h1><p class="sub">Every invoice synced from your accounting software.</p>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button class="btn sm gray flt" data-f="all">All</button><button class="btn sm gray flt" data-f="cleared">Cleared</button><button class="btn sm gray flt" data-f="reported">Reported</button><button class="btn sm flt" data-f="failed" style="background:#fdeeea;color:var(--err)">Failed (7)</button>
+          <span style="flex:1"></span><input style="max-width:220px" placeholder="Search invoice / customer">
+        </div>
+        <div class="card" style="padding:0"><table><thead><tr><th>Invoice</th><th>Customer</th><th>Type</th><th>Doc</th><th>Amount</th><th>ZATCA status</th><th>Date</th><th></th></tr></thead><tbody>
+          <tr data-st="cleared"><td>INV-10293</td><td>Gulf Cement LLC</td><td>Standard</td><td>388</td><td>SAR 12,400</td><td><span class="pill cleared">Cleared</span></td><td>18 Jun</td><td><a class="navlink" data-s="invoice">View</a></td></tr>
+          <tr data-st="reported"><td>INV-10292</td><td>Walk-in</td><td>Simplified</td><td>388</td><td>SAR 230</td><td><span class="pill reported">Reported</span></td><td>18 Jun</td><td><a class="navlink" data-s="invoice">View</a></td></tr>
+          <tr data-st="cleared"><td>CN-2041</td><td>Reem Co.</td><td>Standard</td><td>381</td><td>-SAR 1,200</td><td><span class="pill cleared">Cleared</span></td><td>17 Jun</td><td><a class="navlink" data-s="invoice">View</a></td></tr>
+          <tr data-st="failed"><td>INV-10291</td><td>Reem Co.</td><td>Standard</td><td>388</td><td>SAR 8,900</td><td><span class="pill failed">Failed</span></td><td>17 Jun</td><td><a class="navlink" data-s="invoice">View</a></td></tr>
+          <tr data-st="reported"><td>INV-10290</td><td>Walk-in</td><td>Simplified</td><td>388</td><td>SAR 75</td><td><span class="pill pending">Processing</span></td><td>17 Jun</td><td><a class="navlink" data-s="invoice">View</a></td></tr>
+        </tbody></table></div>
+      </section>
+
+      <!-- INVOICE DETAIL -->
+      <section class="screen" id="invoice">
+        <h1>INV-10291 <span class="pill failed" style="vertical-align:middle">Failed</span></h1>
+        <p class="sub">Standard tax invoice (388) · Reem Co. · 17 Jun 2026</p>
+        <div class="warnbanner"><b>ZATCA rejected:</b> BR-KSA-44 — Buyer VAT registration number is missing for a standard (B2B) invoice.<div style="margin-top:8px"><button class="btn sm" id="resub">Re-submit after fix</button></div></div>
+        <div class="grid g2">
+          <div class="card"><h3>Details</h3><table><tbody>
+            <tr><td>Type</td><td>Standard → Clearance</td></tr><tr><td>Document type</td><td>388 (Tax Invoice)</td></tr>
+            <tr><td>UUID</td><td class="mono">a3f1-…-9c2</td></tr><tr><td>Total</td><td>SAR 8,900 (incl. VAT 1,160)</td></tr>
+            <tr><td>ICV / PIH</td><td class="mono">10291 / 3b7…</td></tr></tbody></table></div>
+          <div class="card"><h3>Compliance artifacts</h3>
+            <div style="text-align:center;padding:10px"><div style="width:120px;height:120px;margin:0 auto;background:repeating-conic-gradient(#0f2233 0 25%,#fff 0 50%) 50%/14px 14px;border:1px solid #ccc"></div><p class="sub" style="margin-top:6px">QR (TLV)</p></div>
+            <button class="btn ghost sm">⬇ Signed XML</button> <button class="btn ghost sm">⬇ Compliant PDF</button>
+            <div class="note">On success these are written back into your accounting software automatically.</div></div>
+        </div>
+      </section>
+
+      <!-- LOGS -->
+      <section class="screen" id="logs">
+        <h1>Audit Logs</h1><p class="sub">Every request/response to ZATCA, for audit.</p>
+        <div class="card" style="padding:0"><table><thead><tr><th>Time</th><th>Invoice</th><th>Operation</th><th>Result</th><th>Detail</th></tr></thead><tbody>
+          <tr><td>18 Jun 14:02</td><td>INV-10293</td><td>Clearance</td><td><span class="pill cleared">200</span></td><td>Cleared</td></tr>
+          <tr><td>18 Jun 14:01</td><td>INV-10292</td><td>Reporting</td><td><span class="pill reported">202</span></td><td>Reported</td></tr>
+          <tr><td>17 Jun 09:11</td><td>INV-10291</td><td>Clearance</td><td><span class="pill failed">400</span></td><td>BR-KSA-44</td></tr>
+        </tbody></table></div>
+      </section>
+
+      <!-- SETTINGS: CONNECTION -->
+      <section class="screen" id="set-connection">
+        <h1>ERP Connection</h1><p class="sub">Manage how the middleware talks to your accounting software.</p>
+        <div class="card"><p><span class="pill cleared">Connected</span> &nbsp; <span class="erpname">Zoho Books</span> · last sync 2 min ago</p>
+          <div style="margin-top:12px;display:flex;gap:10px"><button class="btn ghost test-conn">Test connection</button><button class="btn gray">Re-verify fields</button><button class="btn gray">Edit credentials</button><button class="btn" style="background:#fff;color:var(--err);border:1px solid #f0c0b3">Disconnect</button></div>
+          <div class="conn-result"></div>
+        </div>
+      </section>
+
+      <!-- SETTINGS: KEYS -->
+      <section class="screen" id="set-keys">
+        <h1>API Keys</h1><p class="sub">Authenticate ERP webhooks and the headless API (Mode B).</p>
+        <div class="card" style="padding:0"><table id="keytbl"><thead><tr><th>Name</th><th>Prefix</th><th>Created</th><th>Status</th><th></th></tr></thead><tbody>
+          <tr><td>Zoho webhook</td><td class="mono">sk_zatca_live_9f2a…</td><td>12 Jun</td><td><span class="pill cleared">Active</span></td><td><button class="btn sm gray">Revoke</button></td></tr>
+          <tr><td>Core banking (Mode B)</td><td class="mono">sk_zatca_live_4c80…</td><td>10 Jun</td><td><span class="pill cleared">Active</span></td><td><button class="btn sm gray">Revoke</button></td></tr>
+        </tbody></table></div>
+        <div style="margin-top:12px"><button class="btn" id="genkey">+ Generate new key</button></div>
+      </section>
+
+      <!-- SETTINGS: TEAM -->
+      <section class="screen" id="set-team">
+        <h1>Team Members</h1><p class="sub">Everyone here has equal, full access. No role tiers.</p>
+        <div class="card" style="padding:0"><table id="teamtbl"><thead><tr><th>Name</th><th>Email</th><th>Status</th><th></th></tr></thead><tbody>
+          <tr><td>Anas (you)</td><td>anas@al-noor.sa</td><td><span class="pill cleared">Active</span></td><td></td></tr>
+          <tr><td>Sara</td><td>sara@al-noor.sa</td><td><span class="pill pending">Invited</span></td><td><button class="btn sm gray">Resend</button></td></tr>
+        </tbody></table></div>
+        <div style="margin-top:12px;display:flex;gap:8px"><input id="inviteEmail" style="max-width:280px" placeholder="colleague@company.sa"><button class="btn" id="invite">Invite</button></div>
+      </section>
+
+      <!-- GO LIVE -->
+      <section class="screen" id="set-golive">
+        <h1>Go Live — Demo → Real</h1><p class="sub">You're in Demo (ZATCA simulation). Switching to Real re-onboards against ZATCA production with your real OTP.</p>
+        <div class="card"><div style="display:flex;gap:20px;align-items:center"><span class="badge testing">● Demo (now)</span> → <span class="badge live">● Real</span></div>
+          <ol class="steps" style="margin-top:14px"><li>✓ Connected to accounting software</li><li>✓ Test invoices cleared &amp; reported successfully</li><li>Get a <b>production OTP</b> from the Fatoora portal</li><li>We re-run onboarding and issue your <b>live</b> certificates</li></ol>
+          <div class="note">Your live invoices will then be legally filed with ZATCA in real time.</div>
+          <button class="btn" style="margin-top:8px" id="golive">Start go-live →</button><div class="conn-result"></div>
+        </div>
+      </section>
+
+      <!-- REQUEST SW -->
+      <section class="screen" id="request-sw">
+        <h1>Request support for your accounting software</h1><p class="sub">Not using Odoo or Zoho yet? Tell us — our team will help connect it.</p>
+        <div class="card"><div class="row"><div><label>Accounting software</label><input placeholder="e.g. Microsoft Dynamics 365"></div><div><label>Version / edition</label><input placeholder="optional"></div></div>
+          <label>Anything we should know?</label><textarea rows="3" placeholder="Volume, hosting, contacts…"></textarea>
+          <div style="margin-top:14px"><button class="btn" id="reqsend">Send request</button><div class="conn-result"></div></div>
+        </div>
+      </section>
+
+      <!-- DEV DOCS -->
+      <section class="screen" id="dev-docs">
+        <h1>API Docs &amp; Setup Guides</h1><p class="sub">Self-serve everything — integrate via our API, or follow per-software setup guides.</p>
+        <div class="grid g2">
+          <div class="card"><h3>Headless API (Mode B)</h3><div class="copybox"><span>POST /api/v1/zatca/invoices/submit</span><button class="copy">Copy</button></div><div class="copybox"><span>x-api-key: sk_zatca_live_…</span><button class="copy">Copy</button></div><p class="sub">Onboard · submit (clearance/reporting) · fetch XML/PDF/QR · list · logs.</p><button class="btn ghost sm">Open full API reference</button></div>
+          <div class="card"><h3>Accounting-software setup guides</h3><ol class="steps"><li>Zoho Books — OAuth, custom fields, webhook</li><li>Odoo — fields, JSON-RPC, webhook/automation</li><li>Getting your Fatoora OTP</li></ol><button class="btn ghost sm">Open guides</button></div>
+        </div>
+      </section>
+
+      <!-- HELP -->
+      <section class="screen" id="help">
+        <h1>Help / Support</h1><p class="sub">Self-serve first — our team is one click away when you need us.</p>
+        <div class="grid g3">
+          <div class="card"><h3>📚 Guides</h3><p class="sub">Step-by-step setup for every supported software.</p><a class="navlink" data-s="dev-docs">Open guides →</a></div>
+          <div class="card"><h3>✉️ Contact CBT</h3><p class="sub">Assisted onboarding &amp; troubleshooting on request.</p><button class="btn sm">Message support</button></div>
+          <div class="card"><h3>➕ Request software</h3><p class="sub">Need an unsupported accounting system?</p><a class="navlink" data-s="request-sw">Request →</a></div>
+        </div>
+      </section>
+
+      <!-- ADMIN TENANTS -->
+      <section class="screen" id="admin-tenants">
+        <h1>CBT Admin · Tenants</h1><p class="sub">Internal — cross-tenant view for support. (Convergent staff only.)</p>
+        <div class="card" style="padding:0"><table><thead><tr><th>Business</th><th>Software</th><th>Environment</th><th>Status</th><th>Invoices</th><th></th></tr></thead><tbody>
+          <tr><td>Al-Noor Trading Co.</td><td>Zoho</td><td><span class="badge testing">Demo</span></td><td><span class="pill cleared">Active</span></td><td>5,186</td><td><a class="navlink" data-s="admin-tenant">Open</a></td></tr>
+          <tr><td>Gulf Foods Ltd</td><td>Odoo</td><td><span class="badge live">Live</span></td><td><span class="pill cleared">Active</span></td><td>41,902</td><td><a class="navlink" data-s="admin-tenant">Open</a></td></tr>
+          <tr><td>Tadawul Retail</td><td>Custom API</td><td><span class="badge live">Live</span></td><td><span class="pill pending">Onboarding</span></td><td>12</td><td><a class="navlink" data-s="admin-tenant">Open</a></td></tr>
+        </tbody></table></div>
+      </section>
+
+      <!-- ADMIN TENANT -->
+      <section class="screen" id="admin-tenant">
+        <h1>CBT Admin · Gulf Foods Ltd</h1><p class="sub">Odoo · Live · onboarded 02 Jun 2026</p>
+        <div class="grid g3"><div class="card kpi"><div class="n">41,902</div><div class="l">Cleared/Reported</div></div><div class="card kpi"><div class="n" style="color:var(--err)">63</div><div class="l">Failed</div></div><div class="card kpi"><div class="n">218 days</div><div class="l">CSID valid</div></div></div>
+        <div class="card" style="margin-top:14px"><h3>Support actions</h3><button class="btn ghost sm">View error log</button> <button class="btn ghost sm">Re-trigger failed invoices</button> <button class="btn gray sm">Impersonate (read-only)</button><div class="note">All admin actions on a tenant are recorded in the admin audit trail.</div></div>
+      </section>
+
+      <!-- ADMIN REQUESTS -->
+      <section class="screen" id="admin-requests">
+        <h1>CBT Admin · Software Requests</h1><p class="sub">Customers asking for accounting software we don't support yet.</p>
+        <div class="card" style="padding:0"><table><thead><tr><th>Business</th><th>Requested software</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody>
+          <tr><td>Najd Logistics</td><td>Microsoft Dynamics 365</td><td>16 Jun</td><td><span class="pill pending">New</span></td><td><button class="btn sm">Assign</button></td></tr>
+          <tr><td>Saudi Pharma</td><td>Oracle NetSuite</td><td>14 Jun</td><td><span class="pill reported">In review</span></td><td><button class="btn sm gray">Update</button></td></tr>
+        </tbody></table></div>
+      </section>
+
+    </div>
+  </div>
+</div>
+<div class="mocknote">Interactive mockup · no backend · click around</div>
+
+<script>
+  const crumbs={login:"Login",profile:"Business Profile",onboarding:"Onboarding Wizard",dashboard:"Dashboard",invoices:"Invoices",invoice:"Invoice Detail",logs:"Audit Logs","set-connection":"Settings · ERP Connection","set-keys":"Settings · API Keys","set-team":"Settings · Team","set-golive":"Go Live — Demo → Real","request-sw":"Request Software","dev-docs":"API Docs & Guides",help:"Help / Support","admin-tenants":"Admin · Tenants","admin-tenant":"Admin · Tenant","admin-requests":"Admin · Requests"};
+  const erpLabel={zoho:"Zoho Books",odoo:"Odoo",custom:"Custom / API"};
+  const state={erp:"zoho", ostep:1};
+
+  function applyErpNames(){document.querySelectorAll('.erpname').forEach(e=>e.textContent=erpLabel[state.erp]);}
+  function showErpBlocks(){
+    document.querySelectorAll('.erpblk').forEach(b=>b.classList.toggle('hidden', b.dataset.erp!==state.erp));
+  }
+  function show(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));
+    const el=document.getElementById(id); if(el)el.classList.add('show');
+    document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('active',a.dataset.s===id));
+    document.getElementById('crumb').textContent=crumbs[id]||id;
+    document.querySelector('.content').scrollTop=0;
+    if(id==='onboarding') renderOnb();
+    applyErpNames(); showErpBlocks();
+  }
+
+  /* ---- Onboarding wizard ---- */
+  function renderOnb(){
+    document.querySelectorAll('#onboarding .opanel').forEach(p=>p.classList.toggle('show', +p.dataset.step===state.ostep));
+    document.querySelectorAll('#ostepper .step').forEach(s=>{
+      const n=+s.dataset.step; s.classList.toggle('active',n===state.ostep); s.classList.toggle('done',n<state.ostep);
+    });
+    document.getElementById('oback').disabled = state.ostep===1;
+    const next=document.getElementById('onext');
+    if(state.ostep===1){ next.disabled = !document.querySelector('.opt.selected'); next.textContent='Continue →'; }
+    else if(state.ostep===5){ next.textContent='Finish → Dashboard'; next.disabled=false; }
+    else { next.textContent='Continue →'; next.disabled=false; }
+    showErpBlocks();
+  }
+  document.getElementById('onext').addEventListener('click',()=>{
+    if(state.ostep===5){ show('dashboard'); return; }
+    state.ostep++; renderOnb();
+  });
+  document.getElementById('oback').addEventListener('click',()=>{ if(state.ostep>1){state.ostep--; renderOnb();} });
+  document.querySelectorAll('#ostepper .step').forEach(s=>s.addEventListener('click',()=>{ state.ostep=+s.dataset.step; renderOnb(); }));
+
+  /* ---- integration selection ---- */
+  document.querySelectorAll('.opt').forEach(o=>o.addEventListener('click',()=>{
+    document.querySelectorAll('.opt').forEach(x=>x.classList.remove('selected'));
+    o.classList.add('selected'); state.erp=o.dataset.erp; applyErpNames(); showErpBlocks();
+    document.getElementById('onext').disabled=false;
+  }));
+
+  /* ---- ZATCA progress animation ---- */
+  document.getElementById('startZatca').addEventListener('click',()=>{
+    const wrap=document.getElementById('zatcaProgress'); wrap.classList.remove('hidden');
+    const steps=[...document.querySelectorAll('#zsteps .step')]; let i=0;
+    steps.forEach(s=>s.classList.remove('done','active'));
+    document.getElementById('zatcaDone').classList.add('hidden');
+    const tick=()=>{ if(i>0)steps[i-1].classList.remove('active'),steps[i-1].classList.add('done');
+      if(i<steps.length){ steps[i].classList.add('active'); steps[i].innerHTML=steps[i].textContent+' <span class="spin"></span>'; i++; setTimeout(()=>{steps[i-1].innerHTML=steps[i-1].textContent.replace(/\s*$/,''); tick();},700); }
+      else { document.getElementById('zatcaDone').classList.remove('hidden'); } };
+    tick();
+  });
+
+  /* ---- test invoice ---- */
+  document.getElementById('sendSample').addEventListener('click',function(){
+    this.innerHTML='<span class="spin"></span> Submitting to ZATCA…'; this.disabled=true;
+    setTimeout(()=>{ this.classList.add('hidden'); document.getElementById('sampleResult').classList.remove('hidden'); },1100);
+  });
+
+  /* ---- generic interactive buttons ---- */
+  function flash(el,msg,cls){ const r=el.closest('.card').querySelector('.conn-result'); if(r){r.innerHTML='<div class="okbanner">'+msg+'</div>';} }
+  document.addEventListener('click',e=>{
+    const nav=e.target.closest('[data-s]'); if(nav){e.preventDefault();show(nav.dataset.s);return;}
+    if(e.target.classList.contains('copy')){const b=e.target;const t=b.textContent;b.textContent='Copied ✓';setTimeout(()=>b.textContent=t,1200);return;}
+    if(e.target.classList.contains('test-conn')){const b=e.target;b.innerHTML='<span class="spin"></span> Testing…';setTimeout(()=>{b.textContent='Test connection';flash(b,'✓ Connection OK · synced as '+erpLabel[state.erp]);},900);return;}
+    if(e.target.classList.contains('verify-fields')){const b=e.target;flash(b,'✓ All required ZATCA fields present');return;}
+    if(e.target.id==='golive'){flash(e.target,'Production OTP requested — follow the Fatoora steps, then we issue live certificates.');return;}
+    if(e.target.id==='reqsend'){flash(e.target,'✓ Request sent — our team will reach out by email.');return;}
+    if(e.target.classList.contains('flt')){document.querySelectorAll('#invoices tbody tr').forEach(tr=>{tr.style.display=(e.target.dataset.f==='all'||tr.dataset.st===e.target.dataset.f)?'':'none';});return;}
+    if(e.target.id==='genkey'){const tb=document.querySelector('#keytbl tbody');const tr=document.createElement('tr');tr.innerHTML='<td>New key</td><td class="mono">sk_zatca_live_'+Math.floor(Math.random()*9000+1000)+'…</td><td>now</td><td><span class="pill cleared">Active</span></td><td><button class="btn sm gray">Revoke</button></td>';tb.appendChild(tr);return;}
+    if(e.target.id==='invite'){const v=document.getElementById('inviteEmail').value||'colleague@company.sa';const tb=document.querySelector('#teamtbl tbody');const tr=document.createElement('tr');tr.innerHTML='<td>—</td><td>'+v+'</td><td><span class="pill pending">Invited</span></td><td><button class="btn sm gray">Resend</button></td>';tb.appendChild(tr);document.getElementById('inviteEmail').value='';return;}
+    if(e.target.id==='resub'){e.target.textContent='Re-submitted ✓';e.target.disabled=true;return;}
+  });
+
+  // init
+  document.querySelector('.opt[data-erp="zoho"]').classList.add('selected');
+  applyErpNames();
+</script>
+</body>
+</html>
