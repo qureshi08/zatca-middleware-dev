@@ -44,23 +44,27 @@ export async function setIntegration(fd: FormData) {
   const integration = field(fd, "integration");
   if (!["odoo", "zoho", "custom"].includes(integration)) throw new Error("Invalid integration");
   await supabaseAdmin.from("organizations").update({ integration }).eq("id", org.id);
-
-  if (integration === "custom") {
-    // generate a Mode B API key and show it once on the onboarding page
-    const raw = "sk_zatca_live_" + crypto.randomBytes(24).toString("hex");
-    const hash = crypto.createHash("sha256").update(raw).digest("hex");
-    await supabaseAdmin.from("api_keys").insert({
-      organization_id: org.id,
-      key_prefix: raw.slice(0, 20),
-      key_hash: hash,
-      name: "Mode B key",
-      status: "active",
-    });
-    revalidatePath("/onboarding");
-    redirect(`/onboarding?newkey=${encodeURIComponent(raw)}`);
-  }
   revalidatePath("/onboarding");
   redirect("/onboarding");
+}
+
+/**
+ * Generate an API key for this tenant and show it once. Used as the webhook
+ * `x-api-key` (Odoo/Zoho) and as the Mode B key (custom). Shown only at creation.
+ */
+export async function generateWebhookKey() {
+  const org = await requireOrg();
+  const raw = "sk_zatca_live_" + crypto.randomBytes(24).toString("hex");
+  const hash = crypto.createHash("sha256").update(raw).digest("hex");
+  await supabaseAdmin.from("api_keys").insert({
+    organization_id: org.id,
+    key_prefix: raw.slice(0, 20),
+    key_hash: hash,
+    name: "Integration key",
+    status: "active",
+  });
+  revalidatePath("/onboarding");
+  redirect(`/onboarding?newkey=${encodeURIComponent(raw)}`);
 }
 
 /** Save & mark connected: Zoho Books. Secrets encrypted at rest. */
