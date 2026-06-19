@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getOnboardingState } from "@/lib/org";
-import { setIntegration, saveZohoConnection, saveOdooConnection, resetIntegration, generateWebhookKey, runZatcaOnboarding } from "@/lib/actions";
+import { setIntegration, saveZohoConnection, saveOdooConnection, resetIntegration, generateWebhookKey, runZatcaOnboarding, sendTestInvoice } from "@/lib/actions";
 
 const card: React.CSSProperties = { background: "#fff", border: "1px solid #e3e8ef", borderRadius: 10, padding: "18px 20px", marginBottom: 14 };
 const label: React.CSSProperties = { display: "block", fontSize: 12, color: "#33414f", margin: "12px 0 3px", fontWeight: 600 };
@@ -45,7 +45,7 @@ function KeyBlock({ newkey }: { newkey?: string }) {
   );
 }
 
-export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ newkey?: string; zerr?: string; cerr?: string; cwarn?: string }> }) {
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ newkey?: string; zerr?: string; cerr?: string; cwarn?: string; terr?: string; tok?: string; setup?: string }> }) {
   const sp = await searchParams;
   const state = await getOnboardingState();
   if (!state) return <div style={{ padding: 32 }}>Not authenticated.</div>;
@@ -113,13 +113,18 @@ if record.move_type in ['out_invoice','out_refund'] and record.state == 'posted'
         </div>
       )}
 
-      {/* Step 3 — connect */}
-      {profileComplete && integration && !connected && (
+      {/* Step 3 — connect + accounting-software setup (stays visible until ZATCA is done, or via ?setup=1) */}
+      {profileComplete && integration && (!zatcaOnboarded || sp.setup) && (
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-            <h3 style={{ margin: 0 }}>Step 3 — Connect {integration === "zoho" ? "Zoho Books" : integration === "odoo" ? "Odoo" : "your system"}</h3>
-            <form action={resetIntegration}><button type="submit" style={{ background: "#eef2f6", color: "#445", border: "none", padding: "5px 10px", borderRadius: 6, fontSize: 12, cursor: "pointer" }}>← Change software</button></form>
+            <h3 style={{ margin: 0 }}>{integration === "zoho" ? "Zoho Books" : integration === "odoo" ? "Odoo" : "Custom"} setup</h3>
+            {!zatcaOnboarded && <form action={resetIntegration}><button type="submit" style={{ background: "#eef2f6", color: "#445", border: "none", padding: "5px 10px", borderRadius: 6, fontSize: 12, cursor: "pointer" }}>← Change software</button></form>}
           </div>
+          {connected && (
+            <div style={{ background: "#f1faf4", border: "1px solid #b6e4c6", color: "#1f9d57", padding: "8px 12px", borderRadius: 8, fontSize: 13, marginBottom: 12 }}>
+              ✅ Connected to {integration === "zoho" ? "Zoho Books" : "Odoo"}. {integration === "odoo" ? "Make sure you've added the Server Action + Automated Action below." : "Make sure your workflow webhook below is created."}
+            </div>
+          )}
 
           {sp.cerr && <div style={{ background: "#fdeee9", border: "1px solid #f0c0b3", color: "#c0392b", padding: "9px 12px", borderRadius: 8, fontSize: 13, marginBottom: 12 }}>❌ Connection failed: {sp.cerr}</div>}
           {sp.cwarn && <div style={{ background: "#fff6e0", border: "1px solid #f0d48a", color: "#8a5a00", padding: "9px 12px", borderRadius: 8, fontSize: 13, marginBottom: 12 }}>⚠️ {sp.cwarn}</div>}
@@ -258,10 +263,24 @@ if record.move_type in ['out_invoice','out_refund'] and record.state == 'posted'
       )}
 
       {zatcaOnboarded && (
-        <div style={{ ...card, background: "#f1faf4", borderColor: "#b6e4c6" }}>
-          <h3 style={{ margin: "0 0 6px", color: "#1f9d57" }}>✅ Onboarded in Demo mode</h3>
-          <p style={{ color: "#3a4a5a", fontSize: 13 }}>Invoices created in your accounting software now auto-clear/report against ZATCA simulation. Switch to Real when ready.</p>
-        </div>
+        <>
+          {sp.tok && <div style={{ background: "#e9f8ef", border: "1px solid #b6e4c6", color: "#1f9d57", padding: "10px 14px", borderRadius: 8, fontSize: 13, marginBottom: 12 }}>✅ Test invoice cleared: <b>{sp.tok}</b> — <Link href="/invoices">view it →</Link></div>}
+          {sp.terr && <div style={{ background: "#fdeee9", border: "1px solid #f0c0b3", color: "#c0392b", padding: "10px 14px", borderRadius: 8, fontSize: 13, marginBottom: 12 }}>❌ Test invoice failed: {sp.terr}</div>}
+          <div style={{ ...card, background: "#f1faf4", borderColor: "#b6e4c6" }}>
+            <h3 style={{ margin: "0 0 6px", color: "#1f9d57" }}>✅ Onboarded in Demo mode</h3>
+            <p style={{ color: "#3a4a5a", fontSize: 13, margin: "0 0 14px" }}>
+              You can verify the whole pipeline right now — no ERP trigger needed — by sending a test invoice through ZATCA simulation:
+            </p>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+              <form action={sendTestInvoice}><button type="submit" style={btn}>Send a test invoice →</button></form>
+              <Link href="/invoices" style={{ ...btn, background: "#fff", color: "#1F6FB2", border: "1px solid #1F6FB2", textDecoration: "none" }}>View invoices</Link>
+              <Link href="/" style={{ ...btn, background: "#eef2f6", color: "#445", textDecoration: "none" }}>Dashboard</Link>
+            </div>
+            <p style={{ ...hint, marginTop: 14 }}>
+              Final step <b>in {integration === "odoo" ? "Odoo" : integration === "zoho" ? "Zoho" : "your software"}</b>: make sure the {integration === "odoo" ? "Server Action + Automated Action" : integration === "zoho" ? "workflow webhook" : "API call"} is set up so real invoices flow automatically. <Link href="/onboarding?setup=1">▸ View / finish setup steps</Link>
+            </p>
+          </div>
+        </>
       )}
     </div>
   );

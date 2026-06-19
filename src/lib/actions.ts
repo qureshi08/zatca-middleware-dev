@@ -7,6 +7,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { getActiveOrg } from "@/lib/org";
 import { encryptSecret } from "@/lib/secrets";
 import { completeOnboarding } from "@/lib/zatca/onboarding";
+import { generateInvoiceAction } from "@/lib/zatca/actions";
 import { ZohoClient } from "@/lib/zoho/client";
 import { OdooClient } from "@/lib/odoo/client";
 
@@ -176,4 +177,56 @@ export async function runZatcaOnboarding(fd: FormData) {
   revalidatePath("/onboarding");
   revalidatePath("/");
   redirect(err ? `/onboarding?zerr=${encodeURIComponent(err)}` : "/onboarding");
+}
+
+/**
+ * Send a sample simplified invoice through the REAL pipeline (sign + submit to
+ * ZATCA simulation) — lets the user verify clearance without needing the ERP
+ * trigger wired. Persists to the invoices ledger like the webhook does.
+ */
+export async function sendTestInvoice() {
+  const org = await requireOrg();
+  const invoiceId = "TEST-" + Date.now();
+  const body = {
+    type: "simplified",
+    invoiceId,
+    documentType: "388",
+    items: [{ name: "Test service", quantity: 1, unitPrice: 100, vatRate: 15 }],
+  };
+
+  let res: { success: boolean; data?: Record<string, unknown>; error?: string };
+  try {
+    res = (await generateInvoiceAction(body as never, org.id)) as typeof res;
+  } catch (e) {
+    res = { success: false, error: e instanceof Error ? e.message : "Test invoice failed" };
+  }
+
+  if (!res.success || !res.data) {
+    revalidatePath("/onboarding");
+    redirect(`/onboarding?terr=${encodeURIComponent(res.error || "Test invoice failed")}`);
+  }
+
+  const data = res.data!;
+  const zStatus = String(data.status ?? "");
+  await supabaseAdmin.from("invoices").upsert(
+    {
+      organization_id: org.id,
+      environment: "demo",
+      invoice_number: invoiceId,
+      invoice_type: "simplified",
+      document_type: "388",
+      status: zStatus === "REPORTED" ? "reported" : zStatus === "CLEARED" ? "cleared" : "cleared",
+      total_amount: 115,
+      zatca_status: zStatus,
+      zatca_uuid: data.uuid ?? null,
+      qr_code: data.qrCode ?? null,
+      xml: data.xml ?? null,
+      payload: body,
+    },
+    { onConflict: "organization_id,invoice_number" },
+  );
+
+  revalidatePath("/onboarding");
+  revalidatePath("/");
+  redirect(`/onboarding?tok=${encodeURIComponent(`${invoiceId} → ${zStatus || "DONE"}`)}`);
 }
