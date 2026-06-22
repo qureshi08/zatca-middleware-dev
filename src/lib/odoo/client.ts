@@ -162,7 +162,7 @@ export class OdooClient {
                 {}, // Empty environment info dict
             ]);
             if (!uid || typeof uid !== 'number') {
-                throw new Error('Authentication failed: Invalid credentials or database name.');
+                throw new Error(`Odoo rejected the credentials for database "${db}" — verify the username (your Odoo login email) and the API key. Note: if 2FA is on, you MUST use an API key (My Profile → Account Security → New API Key), not your password.`);
             }
             return uid;
         };
