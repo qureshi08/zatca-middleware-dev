@@ -314,3 +314,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
+// Allow time for: pull invoice -> sign -> submit to ZATCA -> write back
+export const runtime = 'nodejs';
+export const maxDuration = 60;
