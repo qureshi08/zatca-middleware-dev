@@ -277,13 +277,14 @@ if record.move_type in ['out_invoice','out_refund'] and record.state == 'posted'
         <h4 style={{ margin: "0 0 6px" }}>③ Make it automatic in Odoo (one-time, ~5 min)</h4>
         <p style={hint}>This creates two things in Odoo: a <b>Server Action</b> (the code that calls this middleware) and an <b>Automated Action</b> (runs that code whenever an invoice is posted). The code only runs for posted customer invoices/refunds not already cleared, and re-runs are safe — so it won&apos;t clash or double-file.</p>
 
-        <div style={{ background: "#e9f8ef", border: "1px solid #b6e4c6", padding: "10px 14px", borderRadius: 8, fontSize: 12.5, color: "#1f6f43", margin: "10px 0 14px" }}>
-          ⚡ <b>Already have a &quot;ZATCA … Auto-Clearance&quot; action in Odoo</b> (type <i>Send Webhook Notification</i>, from a previous setup)? <b>Don&apos;t create a new one.</b> Just open it and set its <b>URL</b> to:
-          <div style={{ ...copybox, color: "#cfe3f5" }}>{base}/api/odoo/webhook?apiKey=&lt;your integration key from ①&gt;</div>
-          The key goes in the URL (webhook-notification actions don&apos;t send headers), and this middleware accepts Odoo&apos;s native payload. Confirm its Automated Action (trigger on posted) is active — then <b>skip A &amp; B below</b>.
-        </div>
+        <details style={{ margin: "8px 0 14px", fontSize: 12.5 }}>
+          <summary style={{ cursor: "pointer", color: "#6b7785" }}>Already set up ZATCA in Odoo before? (optional — most people skip this)</summary>
+          <div style={{ padding: "10px 12px", marginTop: 6, background: "#f7f9fc", border: "1px solid #e3e8ef", borderRadius: 8, color: "#3a4a5a", lineHeight: 1.6 }}>
+            If you already have a ZATCA auto-clearance action (type <i>Send Webhook Notification</i>) from a prior setup, reuse it instead of making a new one: open it and set its <b>URL</b> to <code>{base}/api/odoo/webhook?apiKey=&lt;your key from ①&gt;</code> (the key goes in the URL since that action type sends no headers; the middleware accepts Odoo&apos;s native payload). Make sure its Automated Action trigger (posted invoices) is active, then you can skip A &amp; B.
+          </div>
+        </details>
 
-        <p style={{ fontWeight: 700, margin: "14px 0 4px", color: "#155a93" }}>A. Create the Server Action (fresh setup — Execute Code)</p>
+        <p style={{ fontWeight: 700, margin: "14px 0 4px", color: "#155a93" }}>A. Create the Server Action (the code)</p>
         <ol style={ol}>
           <li style={{ margin: "7px 0" }}>If you don&apos;t see <b>Technical</b>: Settings → scroll to the bottom → <b>Activate the developer mode</b>.</li>
           <li style={{ margin: "7px 0" }}>Go to <b>Settings → Technical → Actions → Server Actions</b> → <b>New</b>.</li>
