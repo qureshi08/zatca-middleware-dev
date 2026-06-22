@@ -15,7 +15,6 @@ const btn: React.CSSProperties = { background: "#1F6FB2", color: "#fff", border:
 const ghost: React.CSSProperties = { ...btn, background: "#fff", color: "#1F6FB2", border: "1px solid #1F6FB2" };
 const gray: React.CSSProperties = { ...btn, background: "#eef2f6", color: "#445" };
 const copybox: React.CSSProperties = { background: "#0f2233", color: "#cfe3f5", padding: "9px 12px", borderRadius: 7, fontFamily: "Consolas,monospace", fontSize: 12, wordBreak: "break-all", margin: "6px 0" };
-const codeBox: React.CSSProperties = { background: "#0f2233", color: "#a8e6b0", padding: "12px 14px", borderRadius: 8, fontFamily: "Consolas,monospace", fontSize: 11.5, whiteSpace: "pre", overflowX: "auto", margin: "6px 0", lineHeight: 1.5 };
 const row: React.CSSProperties = { display: "flex", gap: 14 };
 const ol: React.CSSProperties = { paddingLeft: 18, fontSize: 13, color: "#33414f", margin: 0 };
 const banner = (bg: string, br: string, fg: string): React.CSSProperties => ({ background: bg, border: `1px solid ${br}`, color: fg, padding: "10px 14px", borderRadius: 8, fontSize: 13, marginBottom: 12 });
@@ -50,16 +49,6 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
     if (data) conn = { label: `org ${data.zoho_org_id}`, status: data.status, last_sync: data.last_sync };
   }
 
-  const zohoBody = `{
-  "action": "pull",
-  "zohoInvoiceId": "\${invoice.invoice_id}",
-  "entityType": "invoice"
-}`;
-  const zohoCnBody = `{
-  "action": "pull",
-  "zohoInvoiceId": "\${creditnote.creditnote_id}",
-  "entityType": "creditnote"
-}`;
 
   return (
     <div style={{ padding: "28px 32px", maxWidth: 880 }}>
@@ -154,7 +143,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
 
               <KeyBlock newkey={sp.newkey} />
 
-              {integration === "zoho" && <ZohoGuide base={base} zohoBody={zohoBody} zohoCnBody={zohoCnBody} />}
+              {integration === "zoho" && <ZohoGuide base={base} apiKey={sp.newkey} />}
               {integration === "odoo" && <OdooGuide base={base} apiKey={sp.newkey} connected={connected} />}
               {integration === "custom" && (
                 <div style={card}><h4 style={{ margin: "0 0 8px" }}>Call our API</h4><div style={copybox}>POST {base}/api/v1/zatca/invoices/submit</div><p style={hint}>Use your integration key (above) as <code>x-api-key</code>. Generating a key marks this connected.</p></div>
@@ -243,25 +232,105 @@ function KeyBlock({ newkey }: { newkey?: string }) {
   );
 }
 
-function ZohoGuide({ base, zohoBody, zohoCnBody }: { base: string; zohoBody: string; zohoCnBody: string }) {
+function ZohoGuide({ base, apiKey }: { base: string; apiKey?: string }) {
+  const key = apiKey || "<generate your key in ① first>";
+  const invoiceUrl = `${base}/api/zoho/webhook?apiKey=${key}&entityType=invoice`;
+  const creditNoteUrl = `${base}/api/zoho/webhook?apiKey=${key}&entityType=creditnote`;
+  const num: React.CSSProperties = { fontWeight: 700, color: "#155a93" };
+
   return (
-    <div style={card}>
-      <h4 style={{ margin: "0 0 8px" }}>② Set up Zoho Books (do this in Zoho)</h4>
-      <p style={hint}>Zoho Books has no API to create webhooks or custom fields, so these few steps are done once in Zoho&apos;s UI. We handle the rest (incl. turning your grant code into a refresh token).</p>
-      <ol style={ol}>
-        <li style={{ margin: "10px 0" }}><b>OAuth credentials.</b> At <a href="https://api-console.zoho.com" target="_blank" rel="noreferrer">api-console.zoho.com</a> (use the console for your data center) → <b>Self Client</b> → copy the <b>Client ID</b> &amp; <b>Client Secret</b>. Then open the <b>Generate Code</b> tab, scope <code>ZohoBooks.fullaccess.all</code>, pick a duration, and copy the <b>grant code</b>. Paste Client ID/Secret + grant code into the form below — we exchange it for a refresh token automatically. Organization ID is under Zoho Books → Settings → Organizations.</li>
-        <li style={{ margin: "10px 0" }}><b>Custom fields</b> (Settings → Preferences → <b>Invoices</b> → Field Customization, and repeat for <b>Credit Notes</b>): <code>cf_zatca_uuid</code> (Text), <code>cf_zatca_status</code> (Text/Dropdown), <code>cf_zatca_qr_code</code> (Multi-line), <code>cf_zatca_error</code> (Multi-line). Optional — write-back also posts a comment + attaches the PDF even without these.</li>
-        <li style={{ margin: "10px 0" }}><b>Webhook for invoices</b> (Settings → Automation → Workflow Rules → on <b>Invoices</b>, created/sent → Webhook):
-          <div style={hint}>URL (POST):</div><div style={copybox}>{base}/api/zoho/webhook</div>
-          <div style={hint}>Header:</div><div style={copybox}>x-api-key: &lt;your integration key from ①&gt;</div>
-          <div style={hint}>Body:</div><pre style={codeBox}>{zohoBody}</pre>
-        </li>
-        <li style={{ margin: "10px 0" }}><b>Webhook for credit notes</b> (same place, but a Workflow Rule on the <b>Credit Notes</b> module) — so 381 adjustments clear too. Same URL &amp; header; body uses the credit-note id:
-          <div style={hint}>Body:</div><pre style={codeBox}>{zohoCnBody}</pre>
-          <span style={hint}>Debit notes (383): if you issue them as an invoice subtype, the invoice webhook already covers them; the middleware detects the debit type and references the original.</span>
-        </li>
-      </ol>
-    </div>
+    <>
+      {/* OAUTH */}
+      <div style={card}>
+        <h4 style={{ margin: "0 0 6px" }}>② Get your Zoho OAuth credentials</h4>
+        <p style={hint}>Zoho Books has no API to create webhooks or custom fields, so the steps below are done once in Zoho&apos;s own UI. We do handle the painful part — turning your grant code into a refresh token.</p>
+        <ol style={ol}>
+          <li style={{ margin: "7px 0" }}>Open <a href="https://api-console.zoho.com" target="_blank" rel="noreferrer">api-console.zoho.com</a> — but use the console for <b>your data center</b> (e.g. <code>api-console.zoho.sa</code> if your Zoho Books URL is <code>books.zoho.sa</code>).</li>
+          <li style={{ margin: "7px 0" }}><b>Add Client</b> → <b>Self Client</b> → <b>Create</b>. On the <b>Client Secret</b> tab, copy the <b>Client ID</b> and <b>Client Secret</b>.</li>
+          <li style={{ margin: "7px 0" }}>Open the <b>Generate Code</b> tab. <b>Scope</b>: <code>ZohoBooks.fullaccess.all</code>; <b>Time Duration</b>: <code>10 minutes</code>; <b>Description</b>: <code>zatca</code> → <b>Create</b> → pick your portal → <b>copy the grant code</b> (starts <code>1000.</code>). It expires in 10 min.</li>
+          <li style={{ margin: "7px 0" }}><b>Organization ID</b>: Zoho Books → <b>Settings → Organizations</b> (the numeric id).</li>
+          <li style={{ margin: "7px 0" }}>Paste Region, Org ID, Client ID, Client Secret and the <b>grant code</b> into the <b>Connection details</b> form below → <b>Test &amp; connect</b>. We exchange the code for a refresh token for you.</li>
+        </ol>
+      </div>
+
+      {/* CUSTOM FIELDS (optional) */}
+      <div style={card}>
+        <h4 style={{ margin: "0 0 6px" }}>③ Add ZATCA custom fields <span style={{ fontWeight: 400, color: "#8a97a6", fontSize: 12 }}>(optional)</span></h4>
+        <p style={hint}>Lets the cleared status/UUID/QR show on the document itself. Even without them, write-back still posts a timeline comment and attaches the compliance PDF.</p>
+        <p style={{ fontSize: 13, color: "#33414f", margin: "6px 0" }}>In Zoho Books → <b>Settings → Preferences → Invoices → Field Customization → + New Custom Field</b>, add each of these (then do the same under <b>Preferences → Credit Notes</b>):</p>
+        <table style={{ fontSize: 12.5, borderCollapse: "collapse", margin: "4px 0" }}><tbody>
+          <tr><td style={{ padding: "2px 16px 2px 0" }}><code>cf_zatca_uuid</code></td><td style={{ color: "#6b7785" }}>Data type: Text (single line)</td></tr>
+          <tr><td style={{ padding: "2px 16px 2px 0" }}><code>cf_zatca_status</code></td><td style={{ color: "#6b7785" }}>Data type: Text or Dropdown</td></tr>
+          <tr><td style={{ padding: "2px 16px 2px 0" }}><code>cf_zatca_qr_code</code></td><td style={{ color: "#6b7785" }}>Data type: Multi-line text</td></tr>
+          <tr><td style={{ padding: "2px 16px 2px 0" }}><code>cf_zatca_error</code></td><td style={{ color: "#6b7785" }}>Data type: Multi-line text</td></tr>
+        </tbody></table>
+      </div>
+
+      {/* INVOICE WORKFLOW — full click-by-click */}
+      <div style={card}>
+        <h4 style={{ margin: "0 0 6px" }}>④ Auto-send <u>invoices</u> — Workflow Rule A</h4>
+        <p style={hint}>Go to <b>Settings → Automation → Workflow Rules → + New Workflow Rule</b>, then fill the screen exactly:</p>
+        <ol style={ol}>
+          <li style={{ margin: "7px 0" }}><span style={num}>Workflow Rule Name</span>: <code>ZATCA Clearance - Invoices</code></li>
+          <li style={{ margin: "7px 0" }}><span style={num}>Description</span>: leave blank.</li>
+          <li style={{ margin: "7px 0" }}><span style={num}>Module</span>: select <b>Invoice</b>.</li>
+          <li style={{ margin: "7px 0" }}><span style={num}>Execute Workflow For</span>: choose <b>All Invoice Types</b>.</li>
+          <li style={{ margin: "7px 0" }}>Click <b>Next</b>.</li>
+          <li style={{ margin: "7px 0" }}>On <b>When do you want to execute this workflow?</b> → pick <b>Event</b> → tick <b>Created</b>. <span style={hint}>(Want only finalized invoices? Tick <b>Sent</b> instead of, or as well as, Created.)</span></li>
+          <li style={{ margin: "7px 0" }}><b>Conditions</b> / &quot;Configure your workflow conditions&quot;: leave the default <b>All Invoices</b> (no filter).</li>
+          <li style={{ margin: "7px 0" }}>Scroll to <b>Actions → Immediate Actions</b>. In the <b>Type</b> dropdown choose <b>Webhook</b>, then in the box next to it click <b>+ New Webhook</b>.</li>
+          <li style={{ margin: "7px 0" }}>In the Webhook form:
+            <ul style={{ margin: "6px 0", paddingLeft: 18 }}>
+              <li style={{ margin: "4px 0" }}><b>Name</b>: <code>ZATCA Invoice Webhook</code></li>
+              <li style={{ margin: "4px 0" }}><b>URL to Notify</b> (paste exactly — your key &amp; type are already in it):
+                <div style={copybox}>{invoiceUrl}</div>
+              </li>
+              <li style={{ margin: "4px 0" }}><b>Method</b>: <b>POST</b></li>
+              <li style={{ margin: "4px 0" }}><b>Module</b>: <b>Invoices</b></li>
+              <li style={{ margin: "4px 0" }}>Under <b>Parameters</b> (a.k.a. &quot;User-Defined Parameters&quot;) click <b>+ Add</b>: set <b>Parameter Name</b> = <code>invoice_id</code>, and for the <b>Value</b> click the field picker and choose <b>Invoice ID</b>.</li>
+              <li style={{ margin: "4px 0" }}>Leave the rest as default → <b>Save</b> the webhook.</li>
+            </ul>
+          </li>
+          <li style={{ margin: "7px 0" }}>Back on the rule, click <b>Save</b>.</li>
+        </ol>
+      </div>
+
+      {/* CREDIT NOTE WORKFLOW — full click-by-click, separate */}
+      <div style={card}>
+        <h4 style={{ margin: "0 0 6px" }}>⑤ Auto-send <u>credit notes</u> — Workflow Rule B</h4>
+        <p style={hint}>A second, separate rule on the Credit Notes module so 381 adjustments clear too. Same path: <b>Settings → Automation → Workflow Rules → + New Workflow Rule</b>.</p>
+        <ol style={ol}>
+          <li style={{ margin: "7px 0" }}><span style={num}>Workflow Rule Name</span>: <code>ZATCA Clearance - Credit Notes</code></li>
+          <li style={{ margin: "7px 0" }}><span style={num}>Description</span>: leave blank.</li>
+          <li style={{ margin: "7px 0" }}><span style={num}>Module</span>: select <b>Credit Note</b>.</li>
+          <li style={{ margin: "7px 0" }}><span style={num}>Execute Workflow For</span>: choose <b>All</b> (if the option appears).</li>
+          <li style={{ margin: "7px 0" }}>Click <b>Next</b>.</li>
+          <li style={{ margin: "7px 0" }}><b>When</b>: pick <b>Event</b> → tick <b>Created</b>.</li>
+          <li style={{ margin: "7px 0" }}><b>Conditions</b>: leave default <b>All Credit Notes</b>.</li>
+          <li style={{ margin: "7px 0" }}><b>Actions → Immediate Actions → Type</b> = <b>Webhook</b> → <b>+ New Webhook</b>.</li>
+          <li style={{ margin: "7px 0" }}>In the Webhook form:
+            <ul style={{ margin: "6px 0", paddingLeft: 18 }}>
+              <li style={{ margin: "4px 0" }}><b>Name</b>: <code>ZATCA Credit Note Webhook</code></li>
+              <li style={{ margin: "4px 0" }}><b>URL to Notify</b>:
+                <div style={copybox}>{creditNoteUrl}</div>
+              </li>
+              <li style={{ margin: "4px 0" }}><b>Method</b>: <b>POST</b></li>
+              <li style={{ margin: "4px 0" }}><b>Module</b>: <b>Credit Notes</b></li>
+              <li style={{ margin: "4px 0" }}>Under <b>Parameters</b> click <b>+ Add</b>: <b>Parameter Name</b> = <code>creditnote_id</code>, <b>Value</b> = field picker → <b>Credit Note ID</b>.</li>
+              <li style={{ margin: "4px 0" }}><b>Save</b> the webhook.</li>
+            </ul>
+          </li>
+          <li style={{ margin: "7px 0" }}>Click <b>Save</b>.</li>
+        </ol>
+        <p style={hint}><b>Debit notes (383):</b> Zoho Books has no separate customer debit-note module — when issued as an invoice subtype they already flow through Rule A, and the middleware detects the debit type and references the original invoice. Nothing extra to set up.</p>
+      </div>
+
+      {/* TEST */}
+      <div style={card}>
+        <h4 style={{ margin: "0 0 6px" }}>⑥ Test</h4>
+        <p style={{ ...hint, margin: 0 }}>Create an invoice in Zoho Books and mark it <b>Sent</b> (or just Create, per your trigger). Within a few seconds the middleware clears it on ZATCA simulation, posts a comment on the document, attaches the QR + compliance PDF, and it appears on your <Link href="/invoices">Invoices</Link> page here. Then do the same with a Credit Note.</p>
+      </div>
+    </>
   );
 }
 

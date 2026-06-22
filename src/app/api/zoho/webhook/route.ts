@@ -45,11 +45,32 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        const body = await req.json();
+        // Parse the body defensively. Zoho Books workflow webhooks may send JSON, a
+        // form-encoded parameter list, or nothing (with the data carried as URL query
+        // params instead). Accept all shapes so setup is "paste a URL + pick a field".
+        const q = req.nextUrl.searchParams;
+        let body: any = {};
+        const ct = (req.headers.get('content-type') || '').toLowerCase();
+        try {
+            if (ct.includes('application/json')) {
+                body = await req.json();
+            } else if (ct.includes('application/x-www-form-urlencoded') || ct.includes('multipart/form-data')) {
+                body = Object.fromEntries((await req.formData()).entries());
+            } else {
+                const text = await req.text();
+                if (text) {
+                    try { body = JSON.parse(text); }
+                    catch { body = Object.fromEntries(new URLSearchParams(text)); }
+                }
+            }
+        } catch { body = {}; }
+        if (body == null || typeof body !== 'object') body = {};
 
-        // Auto-detect action: Zoho native webhooks may post the raw document JSON.
-        const inferredId = body.zohoInvoiceId || body.invoice_id || body.creditnote_id;
-        const action = body.action || (inferredId ? 'pull' : 'push');
+        // The document id and entity type may arrive in the body OR the URL query.
+        const inferredId =
+            body.zohoInvoiceId || body.invoice_id || body.creditnote_id ||
+            q.get('zohoInvoiceId') || q.get('invoice_id') || q.get('creditnote_id') || undefined;
+        const action = body.action || q.get('action') || (inferredId ? 'pull' : 'push');
 
         // ==========================================
         // FLOW A: PUSH MODE (Full Payload)
@@ -141,8 +162,8 @@ export async function POST(req: NextRequest) {
         // ==========================================
         if (action === 'pull') {
             const zohoInvoiceId = inferredId;
-            const entityType: ZohoEntityType = body.entityType
-                || (body.creditnote_id ? 'creditnote' : 'invoice');
+            const entityType: ZohoEntityType = (body.entityType || q.get('entityType')
+                || (body.creditnote_id || q.get('creditnote_id') ? 'creditnote' : 'invoice')) as ZohoEntityType;
 
             if (!zohoInvoiceId) {
                 return NextResponse.json({ error: 'Missing zohoInvoiceId (or invoice_id / creditnote_id) for pull action' }, { status: 400 });
