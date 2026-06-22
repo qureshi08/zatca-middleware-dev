@@ -312,3 +312,108 @@ export async function sendTestInvoice() {
   }
   redirect(`/onboarding?step=4&tok=${encodeURIComponent(`${invoiceId} → ${zStatus || "DONE"}`)}`);
 }
+
+// ===========================================================================
+// SETTINGS — management actions for an already-onboarded tenant.
+// ===========================================================================
+
+/** Generate a fresh integration key and show it once on the Settings page. */
+export async function generateKeyForSettings() {
+  const org = await requireOrg();
+  const raw = "sk_zatca_live_" + crypto.randomBytes(24).toString("hex");
+  const hash = crypto.createHash("sha256").update(raw).digest("hex");
+  await supabaseAdmin.from("api_keys").insert({
+    organization_id: org.id,
+    key_prefix: raw.slice(0, 20),
+    key_hash: hash,
+    name: "Integration key",
+    status: "active",
+  });
+  revalidatePath("/settings");
+  redirect(`/settings?newkey=${encodeURIComponent(raw)}`);
+}
+
+/** Revoke an integration key (scoped to the caller's org). */
+export async function revokeApiKey(fd: FormData) {
+  const org = await requireOrg();
+  const id = field(fd, "id");
+  if (id) {
+    await supabaseAdmin
+      .from("api_keys")
+      .update({ status: "revoked" })
+      .eq("id", id)
+      .eq("organization_id", org.id);
+  }
+  revalidatePath("/settings");
+  redirect("/settings?msg=Key+revoked");
+}
+
+/** Toggle auto-submit (auto-clear invoices on webhook) for the active integration. */
+export async function toggleAutoSubmit(fd: FormData) {
+  const org = await requireOrg();
+  const integration = field(fd, "integration");
+  const next = field(fd, "value") === "true";
+  const table = integration === "zoho" ? "zoho_config" : "odoo_config";
+  await supabaseAdmin.from(table).update({ auto_submit: next }).eq("organization_id", org.id);
+  revalidatePath("/settings");
+  redirect("/settings");
+}
+
+/** Re-test the stored connection and refresh status + last_sync (no re-entry needed). */
+export async function retestConnection() {
+  const org = await requireOrg();
+
+  const { data: oc } = await supabaseAdmin
+    .from("odoo_config")
+    .select("odoo_url, odoo_db, odoo_username, odoo_password")
+    .eq("organization_id", org.id)
+    .maybeSingle();
+
+  if (oc?.odoo_url) {
+    const odoo = new OdooClient({
+      odooUrl: oc.odoo_url,
+      odooDb: oc.odoo_db,
+      odooUsername: oc.odoo_username,
+      odooPassword: decryptSecret(oc.odoo_password) || oc.odoo_password,
+    });
+    const test = await odoo.testConnection();
+    await supabaseAdmin
+      .from("odoo_config")
+      .update({
+        status: test.success ? "connected" : "disconnected",
+        odoo_db: odoo.currentDb, // persist any self-corrected DB name
+        last_sync: test.success ? new Date().toISOString() : null,
+      })
+      .eq("organization_id", org.id);
+    revalidatePath("/settings");
+    redirect(test.success ? "/settings?msg=Connection+verified" : `/settings?err=${encodeURIComponent(test.error || "Connection failed")}`);
+  }
+
+  const { data: zc } = await supabaseAdmin
+    .from("zoho_config")
+    .select("zoho_region, zoho_org_id, zoho_client_id, zoho_client_secret, zoho_refresh_token")
+    .eq("organization_id", org.id)
+    .maybeSingle();
+
+  if (zc?.zoho_org_id) {
+    const zoho = new ZohoClient({
+      zohoRegion: zc.zoho_region || "sa",
+      zohoOrgId: zc.zoho_org_id,
+      zohoClientId: zc.zoho_client_id,
+      zohoClientSecret: decryptSecret(zc.zoho_client_secret) || "",
+      zohoRefreshToken: decryptSecret(zc.zoho_refresh_token) || "",
+    });
+    const test = await zoho.testConnection();
+    await supabaseAdmin
+      .from("zoho_config")
+      .update({
+        status: test.success ? "connected" : "disconnected",
+        last_sync: test.success ? new Date().toISOString() : null,
+      })
+      .eq("organization_id", org.id);
+    revalidatePath("/settings");
+    redirect(test.success ? "/settings?msg=Connection+verified" : `/settings?err=${encodeURIComponent(test.error || "Connection failed")}`);
+  }
+
+  redirect("/settings?err=No+connection+configured+yet");
+}
