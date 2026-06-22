@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { getOnboardingState } from "@/lib/org";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
@@ -26,7 +27,11 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const state = await getOnboardingState();
   if (!state) return <div style={{ padding: 32 }}>Not authenticated.</div>;
 
-  const base = process.env.APP_BASE_URL || "http://localhost:3000";
+  // Derive the public base URL from the live request — always correct (Vercel or localhost), no env var needed.
+  const h = await headers();
+  const host = h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
+  const proto = h.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
+  const base = `${proto}://${host}`;
   const { org, profileComplete, integration, connected, zatcaOnboarded, nextStep } = state;
   const done = [profileComplete, !!integration, connected, zatcaOnboarded];
   const defaultStep = nextStep === "profile" ? 1 : nextStep === "integration" ? 2 : nextStep === "connect" ? 3 : 4;
@@ -140,7 +145,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
               <KeyBlock newkey={sp.newkey} />
 
               {integration === "zoho" && <ZohoGuide base={base} zohoBody={zohoBody} />}
-              {integration === "odoo" && <OdooGuide />}
+              {integration === "odoo" && <OdooGuide base={base} />}
               {integration === "custom" && (
                 <div style={card}><h4 style={{ margin: "0 0 8px" }}>Call our API</h4><div style={copybox}>POST {base}/api/v1/zatca/invoices/submit</div><p style={hint}>Use your integration key (above) as <code>x-api-key</code>. Generating a key marks this connected.</p></div>
               )}
@@ -239,8 +244,7 @@ function ZohoGuide({ base, zohoBody }: { base: string; zohoBody: string }) {
   );
 }
 
-function OdooGuide() {
-  const base = process.env.APP_BASE_URL || "http://localhost:3000";
+function OdooGuide({ base }: { base: string }) {
   const py = `# ZATCA Auto-Clearance  (Server Action: Model = account.move)
 if record.move_type in ['out_invoice','out_refund'] and record.state == 'posted' and record.x_zatca_status != 'cleared':
     import requests
