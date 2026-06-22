@@ -272,16 +272,9 @@ function ZohoGuide({ base, apiKey, connected }: { base: string; apiKey?: string;
         </div>
       </div>
 
-      {/* STEP 2 — WEBHOOK KEY */}
+      {/* STEP 2 — CUSTOM FIELDS (optional) */}
       <div style={card}>
-        <StepHead n={2} title="Generate your webhook key" />
-        <p style={hint}>One key authenticates both workflows below — it&apos;s embedded into the URLs in steps 4 &amp; 5 automatically once generated. Shown only once.</p>
-        <div style={{ marginTop: 8 }}><KeyInline newkey={apiKey} /></div>
-      </div>
-
-      {/* STEP 3 — CUSTOM FIELDS (optional) */}
-      <div style={card}>
-        <StepHead n={3} title="Add ZATCA custom fields" tag="optional" />
+        <StepHead n={2} title="Add ZATCA custom fields" tag="optional" />
         <p style={hint}>Lets the cleared status/UUID/QR show on the document itself. Even without them, write-back still posts a timeline comment and attaches the compliance PDF.</p>
         <p style={{ fontSize: 13, color: "#33414f", margin: "6px 0" }}>In Zoho Books → <b>Settings → Preferences → Invoices → Field Customization → + New Custom Field</b>, add each of these (then the same under <b>Preferences → Credit Notes</b>):</p>
         <table style={{ fontSize: 12.5, borderCollapse: "collapse", margin: "4px 0" }}><tbody>
@@ -290,6 +283,13 @@ function ZohoGuide({ base, apiKey, connected }: { base: string; apiKey?: string;
           <tr><td style={{ padding: "2px 16px 2px 0" }}><code>cf_zatca_qr_code</code></td><td style={{ color: "#6b7785" }}>Data type: Multi-line text</td></tr>
           <tr><td style={{ padding: "2px 16px 2px 0" }}><code>cf_zatca_error</code></td><td style={{ color: "#6b7785" }}>Data type: Multi-line text</td></tr>
         </tbody></table>
+      </div>
+
+      {/* STEP 3 — WEBHOOK KEY (right before the workflows that embed it) */}
+      <div style={card}>
+        <StepHead n={3} title="Generate your webhook key" />
+        <p style={hint}>One key authenticates both workflows — generate it now, just before pasting it. It&apos;s embedded into the URLs in steps 4 &amp; 5 automatically. Shown only once.</p>
+        <div style={{ marginTop: 8 }}><KeyInline newkey={apiKey} /></div>
       </div>
 
       {/* STEP 4 — INVOICE WORKFLOW */}
