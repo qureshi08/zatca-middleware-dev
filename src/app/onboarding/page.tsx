@@ -274,11 +274,39 @@ if record.move_type in ['out_invoice','out_refund'] and record.state == 'posted'
         </details>
       </div>
       <div style={card}>
-        <h4 style={{ margin: "0 0 8px" }}>③ After connecting, add the auto-clearance trigger (in Odoo)</h4>
+        <h4 style={{ margin: "0 0 6px" }}>③ Make it automatic in Odoo (one-time, ~5 min)</h4>
+        <p style={hint}>This creates two things in Odoo: a <b>Server Action</b> (the code that calls this middleware) and an <b>Automated Action</b> (runs that code whenever an invoice is posted). The code only runs for posted customer invoices/refunds not already cleared, and re-runs are safe — so it won&apos;t clash or double-file.</p>
+
+        <p style={{ fontWeight: 700, margin: "14px 0 4px", color: "#155a93" }}>A. Create the Server Action (the code)</p>
         <ol style={ol}>
-          <li style={{ margin: "10px 0" }}><b>Server Action</b> — Settings → Technical → Actions → Server Actions → new, Model <code>account.move</code>, paste (use your key from ①):<pre style={codeBox}>{py}</pre></li>
-          <li style={{ margin: "10px 0" }}><b>Automated Action</b> — Settings → Technical → Automation → Automated Actions: Model <code>account.move</code>, Trigger <b>On Update</b>, Apply on <code>[(&quot;state&quot;,&quot;=&quot;,&quot;posted&quot;)]</code>, Action = the Server Action.</li>
+          <li style={{ margin: "7px 0" }}>If you don&apos;t see <b>Technical</b>: Settings → scroll to the bottom → <b>Activate the developer mode</b>.</li>
+          <li style={{ margin: "7px 0" }}>Go to <b>Settings → Technical → Actions → Server Actions</b> → <b>New</b>.</li>
+          <li style={{ margin: "7px 0" }}><b>Name</b> (the &quot;Set an explicit name&quot; box): type <code>ZATCA Auto-Clearance</code>.</li>
+          <li style={{ margin: "7px 0" }}><b>Model</b>: click it and choose <b>Journal Entry</b> (technical name <code>account.move</code>). ⚠️ Change it from the default <i>&quot;Account&quot;</i> — this is the #1 mistake.</li>
+          <li style={{ margin: "7px 0" }}><b>Type</b>: click the <b>Execute Code</b> button.</li>
+          <li style={{ margin: "7px 0" }}>A <b>Code</b> tab/box appears. Paste exactly this, then replace <code>PASTE_YOUR_INTEGRATION_KEY</code> with your key from ① above:</li>
         </ol>
+        <pre style={codeBox}>{py}</pre>
+        <ol style={ol} start={7}>
+          <li style={{ margin: "7px 0" }}><b>Save</b> (the cloud / save icon, top-left).</li>
+        </ol>
+
+        <p style={{ fontWeight: 700, margin: "16px 0 4px", color: "#155a93" }}>B. Create the Automated Action (the trigger)</p>
+        <ol style={ol}>
+          <li style={{ margin: "7px 0" }}>Go to <b>Settings → Technical → Automation → Automated Actions</b> → <b>New</b>.</li>
+          <li style={{ margin: "7px 0" }}><b>Name</b>: <code>ZATCA on Posted Invoice</code>.</li>
+          <li style={{ margin: "7px 0" }}><b>Model</b>: <b>Journal Entry</b> (<code>account.move</code>).</li>
+          <li style={{ margin: "7px 0" }}><b>Trigger</b>: select <b>On Save</b> (older Odoo calls it <b>On Update</b>).</li>
+          <li style={{ margin: "7px 0" }}><b>Apply on / Domain</b>: set <code>[(&quot;state&quot;,&quot;=&quot;,&quot;posted&quot;)]</code> (so it only fires for posted invoices).</li>
+          <li style={{ margin: "7px 0" }}><b>Actions To Do</b> → add → pick the <b>ZATCA Auto-Clearance</b> server action you made in A.</li>
+          <li style={{ margin: "7px 0" }}><b>Save.</b></li>
+        </ol>
+
+        <div style={{ background: "#f3f6fa", borderLeft: "3px solid #1F6FB2", padding: "8px 12px", borderRadius: "0 6px 6px 0", fontSize: 12.5, color: "#3a4a5a", margin: "12px 0" }}>
+          <b>Already have a ZATCA action set up?</b> Don&apos;t add a duplicate — just open the existing Server Action and update its <code>webhook_url</code> and <code>api_key</code> to the values shown here. Re-posting an invoice is safe: the code skips anything already <code>cleared</code>, and this middleware de-duplicates by invoice number, so there&apos;s no clash and nothing gets filed twice.
+        </div>
+
+        <p style={hint}><b>Test it:</b> open a draft customer invoice in Odoo and click <b>Confirm</b> (post it). Within a few seconds its <code>x_zatca_status</code> becomes <code>cleared</code>/<code>reported</code> with a QR + UUID written back — and it appears on your Dashboard here.</p>
       </div>
     </>
   );
