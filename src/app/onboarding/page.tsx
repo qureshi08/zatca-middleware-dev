@@ -4,7 +4,7 @@ import { getOnboardingState } from "@/lib/org";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
   setIntegration, saveZohoConnection, saveOdooConnection, resetIntegration,
-  generateWebhookKey, runZatcaOnboarding, sendTestInvoice,
+  generateWebhookKey, runZatcaOnboarding, sendTestInvoice, provisionOdooAutomation,
 } from "@/lib/actions";
 
 const card: React.CSSProperties = { background: "#fff", border: "1px solid #e3e8ef", borderRadius: 10, padding: "18px 20px", marginBottom: 14 };
@@ -22,7 +22,7 @@ const banner = (bg: string, br: string, fg: string): React.CSSProperties => ({ b
 
 const STEPS = ["Profile", "Integration", "Connect", "ZATCA"];
 
-export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ step?: string; newkey?: string; zerr?: string; cerr?: string; cwarn?: string; terr?: string; tok?: string }> }) {
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ step?: string; newkey?: string; zerr?: string; cerr?: string; cwarn?: string; terr?: string; tok?: string; pok?: string; perr?: string }> }) {
   const sp = await searchParams;
   const state = await getOnboardingState();
   if (!state) return <div style={{ padding: 32 }}>Not authenticated.</div>;
@@ -141,11 +141,13 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
               </div>
               {sp.cerr && <div style={banner("#fdeee9", "#f0c0b3", "#c0392b")}>❌ Connection failed: {sp.cerr}</div>}
               {sp.cwarn && <div style={banner("#fff6e0", "#f0d48a", "#8a5a00")}>⚠️ {sp.cwarn}</div>}
+              {sp.pok && <div style={banner("#e9f8ef", "#b6e4c6", "#1f9d57")}>✅ Automated setup done in Odoo: {sp.pok} You can post an invoice now.</div>}
+              {sp.perr && <div style={banner("#fff6e0", "#f0d48a", "#8a5a00")}>⚠️ Automated setup didn&apos;t fully complete: {sp.perr} — you can use the manual steps below.</div>}
 
               <KeyBlock newkey={sp.newkey} />
 
               {integration === "zoho" && <ZohoGuide base={base} zohoBody={zohoBody} />}
-              {integration === "odoo" && <OdooGuide base={base} apiKey={sp.newkey} />}
+              {integration === "odoo" && <OdooGuide base={base} apiKey={sp.newkey} connected={connected} />}
               {integration === "custom" && (
                 <div style={card}><h4 style={{ margin: "0 0 8px" }}>Call our API</h4><div style={copybox}>POST {base}/api/v1/zatca/invoices/submit</div><p style={hint}>Use your integration key (above) as <code>x-api-key</code>. Generating a key marks this connected.</p></div>
               )}
@@ -244,7 +246,7 @@ function ZohoGuide({ base, zohoBody }: { base: string; zohoBody: string }) {
   );
 }
 
-function OdooGuide({ base, apiKey }: { base: string; apiKey?: string }) {
+function OdooGuide({ base, apiKey, connected }: { base: string; apiKey?: string; connected: boolean }) {
   const hookUrl = `${base}/api/odoo/webhook?apiKey=${apiKey || "<generate your key in ① first>"}`;
   return (
     <>
@@ -261,8 +263,29 @@ function OdooGuide({ base, apiKey }: { base: string; apiKey?: string }) {
         </details>
       </div>
       <div style={card}>
-        <h4 style={{ margin: "0 0 6px" }}>③ Make it automatic in Odoo (one-time, ~5 min)</h4>
-        <p style={hint}>Create a <b>Server Action</b> that sends each posted invoice to this middleware, and an <b>Automated Action</b> that runs it. We use Odoo&apos;s native <b>Send Webhook Notification</b> — Odoo&apos;s &quot;Execute Code&quot; sandbox blocks <code>import</code> (the &quot;forbidden opcode&quot; error), so a webhook action is the reliable, no-code way.</p>
+        <h4 style={{ margin: "0 0 6px" }}>③ Make it automatic in Odoo</h4>
+
+        {/* Primary path: we do it for you over RPC */}
+        <div style={{ background: "#eef5fc", border: "1px solid #bcd9f2", borderRadius: 8, padding: "14px 16px", marginBottom: 14 }}>
+          <p style={{ margin: "0 0 8px", fontWeight: 700, color: "#155a93" }}>⚡ Let us set it up for you (recommended)</p>
+          <p style={{ ...hint, margin: "0 0 10px" }}>
+            We&apos;ll connect to your Odoo and create everything automatically — install the <b>Automation Rules</b> app
+            if needed, add the webhook <b>Server Action</b>, and the <b>Automated Action</b> that fires it on every posted
+            customer invoice. No Technical menus, no clicking.
+          </p>
+          {connected ? (
+            <form action={provisionOdooAutomation}>
+              <button type="submit" style={btn}>⚡ Set up automation in Odoo for me →</button>
+            </form>
+          ) : (
+            <p style={{ ...hint, margin: 0, color: "#c0392b" }}>Connect Odoo below first, then this button appears.</p>
+          )}
+        </div>
+
+        <details style={{ fontSize: 12.5 }}>
+          <summary style={{ cursor: "pointer", color: "#6b7785", fontWeight: 600 }}>Prefer to do it by hand in Odoo? (manual steps)</summary>
+          <div style={{ marginTop: 10 }}>
+        <p style={hint}>Create a <b>Server Action</b> that sends each posted invoice to this middleware, and an <b>Automated Action</b> that runs it. We use Odoo&apos;s native <b>Send Webhook Notification</b> — Odoo&apos;s &quot;Execute Code&quot; sandbox blocks <code>import</code> (the &quot;forbidden opcode&quot; error), so a webhook action is the reliable, no-code way. If you don&apos;t see <b>Automated Actions</b> under Settings → Technical → Automation, install the <b>Automation Rules</b> app first (Apps → search <code>Automation Rules</code> → Activate).</p>
 
         <p style={{ fontWeight: 700, margin: "14px 0 4px", color: "#155a93" }}>A. Create the Server Action</p>
         <ol style={ol}>
@@ -296,7 +319,10 @@ function OdooGuide({ base, apiKey }: { base: string; apiKey?: string }) {
           </div>
         </details>
 
-        <p style={hint}><b>Test:</b> open a draft customer invoice in Odoo → <b>Confirm</b> (post it). In a few seconds its <code>x_zatca_status</code> becomes <code>cleared</code>/<code>reported</code> with a QR + UUID, and it shows on your Dashboard here. The middleware de-duplicates by invoice number, so the same invoice won&apos;t create duplicate records.</p>
+          </div>
+        </details>
+
+        <p style={{ ...hint, marginTop: 14 }}><b>Test (either path):</b> open a draft customer invoice in Odoo → <b>Confirm</b> (post it). In a few seconds its <code>x_zatca_status</code> becomes <code>cleared</code>/<code>reported</code> with a QR + UUID, and it shows on your Dashboard here. The middleware de-duplicates by invoice number, so the same invoice won&apos;t create duplicate records.</p>
       </div>
     </>
   );

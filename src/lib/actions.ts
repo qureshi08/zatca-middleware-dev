@@ -3,9 +3,10 @@
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { getActiveOrg } from "@/lib/org";
-import { encryptSecret } from "@/lib/secrets";
+import { encryptSecret, decryptSecret } from "@/lib/secrets";
 import { completeOnboarding } from "@/lib/zatca/onboarding";
 import { generateInvoiceAction } from "@/lib/zatca/actions";
 import { ZohoClient } from "@/lib/zoho/client";
@@ -150,6 +151,67 @@ export async function saveOdooConnection(fd: FormData) {
     if (!prov.success && prov.errors?.length) warn = "Connected, but Odoo field provisioning had issues: " + prov.errors.join(", ");
   } catch { /* best-effort */ }
   redirect(warn ? `/onboarding?step=3&cwarn=${encodeURIComponent(warn)}` : "/onboarding?step=3");
+}
+
+/**
+ * One-click Odoo automation setup — does in code what the manual guide describes:
+ * installs the Automation Rules module, creates the webhook Server Action, and the
+ * Automated Action that fires it on posted customer invoices. Uses the stored
+ * (encrypted) connection and a freshly-minted integration key embedded in the URL,
+ * so the user never touches Odoo's Technical screens.
+ */
+export async function provisionOdooAutomation() {
+  const org = await requireOrg();
+
+  const { data: config } = await supabaseAdmin
+    .from("odoo_config")
+    .select("odoo_url, odoo_db, odoo_username, odoo_password")
+    .eq("organization_id", org.id)
+    .maybeSingle();
+
+  if (!config?.odoo_url) {
+    redirect(`/onboarding?step=3&cerr=${encodeURIComponent("Connect Odoo first, then run automated setup.")}`);
+  }
+
+  // Mint a dedicated integration key for the webhook (raw value only available now,
+  // so we embed it directly into the action URL inside Odoo).
+  const raw = "sk_zatca_live_" + crypto.randomBytes(24).toString("hex");
+  const hash = crypto.createHash("sha256").update(raw).digest("hex");
+  await supabaseAdmin.from("api_keys").insert({
+    organization_id: org.id,
+    key_prefix: raw.slice(0, 20),
+    key_hash: hash,
+    name: "Odoo webhook key",
+    status: "active",
+  });
+
+  // Build the public webhook URL from the live request host (no env var needed).
+  const h = await headers();
+  const host = h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
+  const proto = h.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
+  const webhookUrl = `${proto}://${host}/api/odoo/webhook?apiKey=${encodeURIComponent(raw)}`;
+
+  const odoo = new OdooClient({
+    odooUrl: config.odoo_url,
+    odooDb: config.odoo_db,
+    odooUsername: config.odoo_username,
+    odooPassword: decryptSecret(config.odoo_password) || config.odoo_password,
+  });
+
+  let result: { success: boolean; steps: string[]; errors: string[] };
+  try {
+    result = await odoo.provisionAutomation(webhookUrl);
+  } catch (e) {
+    result = { success: false, steps: [], errors: [e instanceof Error ? e.message : "Automated setup failed"] };
+  }
+
+  revalidatePath("/onboarding");
+
+  if (result.success) {
+    redirect(`/onboarding?step=3&pok=${encodeURIComponent(result.steps.join(" "))}`);
+  }
+  const msg = [...result.steps, ...result.errors].join(" — ");
+  redirect(`/onboarding?step=3&perr=${encodeURIComponent(msg || "Automated setup could not complete; use the manual steps below.")}`);
 }
 
 /** Let the user change their integration choice. */

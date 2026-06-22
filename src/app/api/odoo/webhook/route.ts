@@ -4,6 +4,7 @@ import { generateInvoiceAction } from '@/lib/zatca/actions';
 import { supabaseAdmin } from '@/lib/supabase';
 import { OdooClient } from '@/lib/odoo/client';
 import { generateInvoicePDF } from '@/lib/zatca/pdf/generator';
+import { decryptSecret } from '@/lib/secrets';
 
 /**
  * POST /api/odoo/webhook
@@ -156,12 +157,12 @@ export async function POST(req: NextRequest) {
                 }, { status: 400 });
             }
 
-            // 2. Initialize Odoo Client
+            // 2. Initialize Odoo Client (password is stored encrypted at rest — decrypt it).
             const odoo = new OdooClient({
                 odooUrl: config.odoo_url,
                 odooDb: config.odoo_db,
                 odooUsername: config.odoo_username,
-                odooPassword: config.odoo_password
+                odooPassword: decryptSecret(config.odoo_password) || config.odoo_password
             });
 
             // 3. Fetch invoice details from Odoo

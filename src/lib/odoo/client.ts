@@ -241,6 +241,124 @@ export class OdooClient {
     }
 
     /**
+     * Fully provisions Odoo so posted customer invoices are auto-sent to this
+     * middleware — over the same JSON-RPC channel, so the user never has to click
+     * through Odoo's Server Action / Automated Action screens.
+     *
+     * It (1) installs the `base_automation` module if missing (this is what adds the
+     * "Automated Actions" menu — fresh Odoo databases often lack it), (2) creates or
+     * repoints a native "Send Webhook Notification" server action to `webhookUrl`,
+     * and (3) creates or updates the automated action that fires it on posted
+     * customer invoices/credit notes. Idempotent and version-aware (Odoo 17+).
+     */
+    async provisionAutomation(webhookUrl: string): Promise<{ success: boolean; steps: string[]; errors: string[] }> {
+        const steps: string[] = [];
+        const errors: string[] = [];
+        const ACTION_NAME = 'ZATCA Auto-Clearance';
+        const RULE_NAME = 'ZATCA on Posted Invoice';
+        // Only posted customer invoices and credit notes — not vendor bills or journal entries.
+        const FILTER_DOMAIN = "[('state','=','posted'),('move_type','in',['out_invoice','out_refund'])]";
+
+        try {
+            await this.authenticate();
+
+            // 1. Ensure the base_automation module (the "Automation Rules" app) is installed.
+            try {
+                const mods = await this.execute('ir.module.module', 'search_read', [
+                    [['name', '=', 'base_automation']], ['id', 'state']
+                ]);
+                if (!mods || mods.length === 0) {
+                    errors.push('The "Automation Rules" (base_automation) module is not available in this Odoo.');
+                } else if (mods[0].state !== 'installed') {
+                    await this.execute('ir.module.module', 'button_immediate_install', [[mods[0].id]]);
+                    steps.push('Installed the "Automation Rules" module (adds the Automated Actions menu).');
+                } else {
+                    steps.push('Automation Rules module already installed.');
+                }
+            } catch (e: any) {
+                errors.push(`Module install failed (install "Automation Rules" from Apps, then retry): ${e.message}`);
+            }
+
+            // 2. Resolve the account.move model id.
+            const models = await this.execute('ir.model', 'search_read', [
+                [['model', '=', 'account.move']], ['id']
+            ]);
+            if (!models || models.length === 0) throw new Error('Model account.move not found in this Odoo.');
+            const modelId = models[0].id;
+
+            // 3. Confirm this Odoo supports native webhook server actions (Odoo 17+).
+            const saFields = await this.execute('ir.actions.server', 'fields_get', [[], ['type']]);
+            if (!saFields || !('webhook_url' in saFields)) {
+                errors.push('This Odoo version has no native "Send Webhook Notification" action (needs Odoo 17+). Use the manual guide below.');
+                return { success: false, steps, errors };
+            }
+
+            // 4. Create or repoint the webhook server action.
+            let serverActionId: number;
+            const existingActions = await this.execute('ir.actions.server', 'search_read', [
+                [['name', '=', ACTION_NAME], ['model_id', '=', modelId]], ['id']
+            ]);
+            if (existingActions && existingActions.length > 0) {
+                serverActionId = existingActions[0].id;
+                await this.execute('ir.actions.server', 'write', [
+                    [serverActionId], { state: 'webhook', webhook_url: webhookUrl }
+                ]);
+                steps.push(`Repointed existing "${ACTION_NAME}" action to the middleware URL.`);
+            } else {
+                serverActionId = await this.execute('ir.actions.server', 'create', [{
+                    name: ACTION_NAME,
+                    model_id: modelId,
+                    state: 'webhook',
+                    webhook_url: webhookUrl,
+                }]);
+                steps.push(`Created webhook server action "${ACTION_NAME}".`);
+            }
+
+            // 5. Create or update the automated action that fires it on posted invoices.
+            const baFields = await this.execute('base.automation', 'fields_get', [[], ['type']]);
+
+            // Pick a trigger value this Odoo version actually supports.
+            let trigger = 'on_create_or_write';
+            const trigSelection = baFields?.trigger?.selection;
+            if (Array.isArray(trigSelection)) {
+                const allowed = trigSelection.map((s: any) => s[0]);
+                if (!allowed.includes(trigger)) {
+                    trigger = allowed.includes('on_write') ? 'on_write' : (allowed[0] || trigger);
+                }
+            }
+
+            const ruleVals: Record<string, any> = {
+                name: RULE_NAME,
+                model_id: modelId,
+                trigger,
+                filter_domain: FILTER_DOMAIN,
+            };
+            // Link the server action: m2m `action_server_ids` (Odoo 16+) or legacy m2o `action_server_id`.
+            if ('action_server_ids' in baFields) {
+                ruleVals.action_server_ids = [[6, 0, [serverActionId]]];
+            } else if ('action_server_id' in baFields) {
+                ruleVals.action_server_id = serverActionId;
+            }
+
+            const existingRules = await this.execute('base.automation', 'search_read', [
+                [['name', '=', RULE_NAME], ['model_id', '=', modelId]], ['id']
+            ]);
+            if (existingRules && existingRules.length > 0) {
+                await this.execute('base.automation', 'write', [[existingRules[0].id], ruleVals]);
+                steps.push(`Updated automated action "${RULE_NAME}" (fires on posted customer invoices).`);
+            } else {
+                await this.execute('base.automation', 'create', [ruleVals]);
+                steps.push(`Created automated action "${RULE_NAME}" (fires on posted customer invoices).`);
+            }
+
+            return { success: errors.length === 0, steps, errors };
+        } catch (e: any) {
+            errors.push(e.message);
+            return { success: false, steps, errors };
+        }
+    }
+
+    /**
      * Pulls an invoice from Odoo and maps it to SimpleInvoiceInput
      */
     async getInvoice(invoiceId: number): Promise<any> {
