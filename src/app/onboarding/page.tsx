@@ -143,30 +143,13 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
 
               <KeyBlock newkey={sp.newkey} />
 
-              {integration === "zoho" && <ZohoGuide base={base} apiKey={sp.newkey} />}
+              {integration === "zoho" && <ZohoGuide base={base} apiKey={sp.newkey} connected={connected} />}
               {integration === "odoo" && <OdooGuide base={base} apiKey={sp.newkey} connected={connected} />}
               {integration === "custom" && (
                 <div style={card}><h4 style={{ margin: "0 0 8px" }}>Call our API</h4><div style={copybox}>POST {base}/api/v1/zatca/invoices/submit</div><p style={hint}>Use your integration key (above) as <code>x-api-key</code>. Generating a key marks this connected.</p></div>
               )}
 
               {/* connection form (always available to (re)connect) */}
-              {integration === "zoho" && (
-                <div style={card}>
-                  <h4 style={{ margin: "0 0 6px" }}>Connection details — verified live</h4>
-                  <form action={saveZohoConnection}>
-                    <div style={row}><div style={{ flex: 1 }}><label style={label}>Region</label><input style={input} name="zoho_region" defaultValue="sa" /><p style={hint}>Zoho data center: sa, com, eu, in, com.au, jp, ca.</p></div><div style={{ flex: 1 }}><label style={label}>Organization ID</label><input style={input} name="zoho_org_id" required /></div></div>
-                    <div style={row}><div style={{ flex: 1 }}><label style={label}>Client ID</label><input style={input} name="zoho_client_id" required /></div><div style={{ flex: 1 }}><label style={label}>Client secret</label><input style={input} name="zoho_client_secret" type="password" required /></div></div>
-                    <label style={label}>Grant code <span style={{ color: "#1f9d57" }}>(recommended — we exchange it for you)</span></label>
-                    <input style={input} name="zoho_grant_code" placeholder="1000.xxxxxxxx… from Self Client → Generate Code" />
-                    <p style={hint}>From api-console.zoho → your Self Client → <b>Generate Code</b>, scope <code>ZohoBooks.fullaccess.all</code>. Codes expire in minutes — generate it right before connecting.</p>
-                    <details style={{ marginTop: 6 }}>
-                      <summary style={{ cursor: "pointer", color: "#6b7785", fontSize: 12.5 }}>Already have a refresh token? Use it instead</summary>
-                      <label style={label}>Refresh token</label><input style={input} name="zoho_refresh_token" type="password" />
-                    </details>
-                    <button type="submit" style={{ ...btn, marginTop: 16 }}>Test &amp; connect →</button>
-                  </form>
-                </div>
-              )}
               {integration === "odoo" && (
                 <div style={card}>
                   <h4 style={{ margin: "0 0 6px" }}>Connection details — verified live</h4>
@@ -232,7 +215,7 @@ function KeyBlock({ newkey }: { newkey?: string }) {
   );
 }
 
-function ZohoGuide({ base, apiKey }: { base: string; apiKey?: string }) {
+function ZohoGuide({ base, apiKey, connected }: { base: string; apiKey?: string; connected: boolean }) {
   const key = apiKey || "<generate your key in ① first>";
   const invoiceUrl = `${base}/api/zoho/webhook?apiKey=${key}&entityType=invoice`;
   const creditNoteUrl = `${base}/api/zoho/webhook?apiKey=${key}&entityType=creditnote`;
@@ -249,8 +232,32 @@ function ZohoGuide({ base, apiKey }: { base: string; apiKey?: string }) {
           <li style={{ margin: "7px 0" }}><b>Add Client</b> → <b>Self Client</b> → <b>Create</b>. On the <b>Client Secret</b> tab, copy the <b>Client ID</b> and <b>Client Secret</b>.</li>
           <li style={{ margin: "7px 0" }}>Open the <b>Generate Code</b> tab. <b>Scope</b>: <code>ZohoBooks.fullaccess.all</code>; <b>Time Duration</b>: <code>10 minutes</code>; <b>Description</b>: <code>zatca</code> → <b>Create</b> → pick your portal → <b>copy the grant code</b> (starts <code>1000.</code>). It expires in 10 min.</li>
           <li style={{ margin: "7px 0" }}><b>Organization ID</b>: Zoho Books → <b>Settings → Organizations</b> (the numeric id).</li>
-          <li style={{ margin: "7px 0" }}>Paste Region, Org ID, Client ID, Client Secret and the <b>grant code</b> into the <b>Connection details</b> form below → <b>Test &amp; connect</b>. We exchange the code for a refresh token for you.</li>
+          <li style={{ margin: "7px 0" }}>Paste them into the form just below → <b>Test &amp; connect</b>. We exchange the code for a refresh token for you.</li>
         </ol>
+
+        {/* Connection form lives right here, with the instructions that fill it. */}
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid #eef2f6" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <h5 style={{ margin: 0, fontSize: 14 }}>Connection details</h5>
+            <span style={connected
+              ? { background: "#e9f8ef", color: "#1f9d57", fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999 }
+              : { background: "#fdeee9", color: "#c0392b", fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999 }}>
+              {connected ? "✓ Connected" : "Not connected yet"}
+            </span>
+          </div>
+          <form action={saveZohoConnection}>
+            <div style={row}><div style={{ flex: 1 }}><label style={label}>Region</label><input style={input} name="zoho_region" defaultValue="sa" /><p style={hint}>Zoho data center: sa, com, eu, in, com.au, jp, ca.</p></div><div style={{ flex: 1 }}><label style={label}>Organization ID</label><input style={input} name="zoho_org_id" required /></div></div>
+            <div style={row}><div style={{ flex: 1 }}><label style={label}>Client ID</label><input style={input} name="zoho_client_id" required /></div><div style={{ flex: 1 }}><label style={label}>Client secret</label><input style={input} name="zoho_client_secret" type="password" required /></div></div>
+            <label style={label}>Grant code <span style={{ color: "#1f9d57" }}>(recommended — we exchange it for you)</span></label>
+            <input style={input} name="zoho_grant_code" placeholder="1000.xxxxxxxx… from Self Client → Generate Code" />
+            <p style={hint}>From api-console.zoho → your Self Client → <b>Generate Code</b>, scope <code>ZohoBooks.fullaccess.all</code>. Codes expire in minutes — generate it right before connecting.</p>
+            <details style={{ marginTop: 6 }}>
+              <summary style={{ cursor: "pointer", color: "#6b7785", fontSize: 12.5 }}>Already have a refresh token? Use it instead</summary>
+              <label style={label}>Refresh token</label><input style={input} name="zoho_refresh_token" type="password" />
+            </details>
+            <button type="submit" style={{ ...btn, marginTop: 16 }}>Test &amp; connect →</button>
+          </form>
+        </div>
       </div>
 
       {/* CUSTOM FIELDS (optional) */}
