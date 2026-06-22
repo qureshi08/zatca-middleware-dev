@@ -306,8 +306,8 @@ function ZohoGuide({ base, apiKey, connected }: { base: string; apiKey?: string;
           <li style={{ margin: "7px 0" }}><span style={num}>Action Type</span>: select <b>Created</b> from the dropdown. <span style={hint}>(Only want finalized invoices? Choose <b>Submitted</b> instead.)</span> It then reads &quot;…executed when invoice is created&quot;.</li>
           <li style={{ margin: "7px 0" }}><span style={num}>Criteria</span>: to clear <b>every</b> invoice, add <b>no</b> criteria — just skip the <b>+ New Criteria</b> button. If a <b>Criterion 1</b> dialog opens, set <b>Add criteria for this workflow rule?</b> to <b>No</b> and click <b>Done</b>. (Add a criterion only if you want to filter which invoices clear.)</li>
           <li style={{ margin: "7px 0" }}>On the <b>TRUE</b> branch, click <b>+ Immediate Actions</b> → the <b>Associate Immediate Actions</b> dialog opens.</li>
-          <li style={{ margin: "7px 0" }}><span style={num}>Action Type</span>: select <b>Webhook</b>. <span style={hint}>(Not Custom Functions / Email — ignore any pre-existing <code>zatca_validate_invoice</code> function.)</span></li>
-          <li style={{ margin: "7px 0" }}><span style={num}>Name</span>: open the dropdown → <b>+ Add New Action</b> to create the webhook, and fill its form:
+          <li style={{ margin: "7px 0" }}><span style={num}>Action Type</span>: select <b>Webhooks</b>. <span style={hint}>(Not Custom Functions / Email — ignore any pre-existing <code>zatca_validate_invoice</code> function.)</span></li>
+          <li style={{ margin: "7px 0" }}><span style={num}>Name</span>: open the dropdown (it&apos;ll say &quot;No results found&quot; — none exist yet) → <b>+ Add New Webhook</b>, and fill its form:
             <ul style={{ margin: "6px 0", paddingLeft: 18 }}>
               <li style={{ margin: "4px 0" }}><b>Name</b>: <code>ZATCA Invoice Webhook</code></li>
               <li style={{ margin: "4px 0" }}><b>URL to Notify</b> (paste exactly — your key &amp; type are already in it):
@@ -337,7 +337,7 @@ function ZohoGuide({ base, apiKey, connected }: { base: string; apiKey?: string;
           <li style={{ margin: "7px 0" }}><span style={num}>Workflow Type</span>: <b>Event Based</b>; <span style={num}>Action Type</span>: <b>Created</b>.</li>
           <li style={{ margin: "7px 0" }}><span style={num}>Criteria</span>: add <b>none</b> to cover all credit notes (if the <b>Criterion 1</b> dialog opens, set <b>Add criteria?</b> = <b>No</b> → <b>Done</b>).</li>
           <li style={{ margin: "7px 0" }}>On the <b>TRUE</b> branch → <b>+ Immediate Actions</b> → <b>Associate Immediate Actions</b> dialog.</li>
-          <li style={{ margin: "7px 0" }}><span style={num}>Action Type</span>: <b>Webhook</b>. <span style={num}>Name</span>: <b>+ Add New Action</b> → fill the webhook form:
+          <li style={{ margin: "7px 0" }}><span style={num}>Action Type</span>: <b>Webhooks</b>. <span style={num}>Name</span>: open dropdown → <b>+ Add New Webhook</b> → fill the form:
             <ul style={{ margin: "6px 0", paddingLeft: 18 }}>
               <li style={{ margin: "4px 0" }}><b>Name</b>: <code>ZATCA Credit Note Webhook</code></li>
               <li style={{ margin: "4px 0" }}><b>URL to Notify</b>:
