@@ -62,8 +62,10 @@ export class OdooClient {
         } catch (e: any) {
             console.warn('[Odoo Connection Failure]:', e.message);
             
-            // Check for mock/simulation bypass for convergentbt
-            if (this.url.includes('convergentbt') || this.db === 'convergentbt' || this.url.includes('localhost') || this.url.includes('mock') || this.password === 'password123') {
+            // Mock/simulation bypass — ONLY for explicit test sentinels, never for a
+            // real tenant. (A real Odoo named "convergentbt" must surface real errors,
+            // not silently fall back to fake data, or diagnosis becomes impossible.)
+            if (this.url.includes('mock') || this.password === 'password123') {
                 console.log(`[Odoo Client] Simulated Mock Mode triggered for URL: ${this.url}, DB: ${this.db}`);
                 if (service === 'common' && method === 'authenticate') {
                     return 1; // Mock User ID
