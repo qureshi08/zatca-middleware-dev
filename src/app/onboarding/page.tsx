@@ -145,7 +145,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
               <KeyBlock newkey={sp.newkey} />
 
               {integration === "zoho" && <ZohoGuide base={base} zohoBody={zohoBody} />}
-              {integration === "odoo" && <OdooGuide base={base} />}
+              {integration === "odoo" && <OdooGuide base={base} apiKey={sp.newkey} />}
               {integration === "custom" && (
                 <div style={card}><h4 style={{ margin: "0 0 8px" }}>Call our API</h4><div style={copybox}>POST {base}/api/v1/zatca/invoices/submit</div><p style={hint}>Use your integration key (above) as <code>x-api-key</code>. Generating a key marks this connected.</p></div>
               )}
@@ -244,21 +244,8 @@ function ZohoGuide({ base, zohoBody }: { base: string; zohoBody: string }) {
   );
 }
 
-function OdooGuide({ base }: { base: string }) {
-  const py = `# ZATCA Auto-Clearance  (Server Action: Model = account.move)
-if record.move_type in ['out_invoice','out_refund'] and record.state == 'posted' and record.x_zatca_status != 'cleared':
-    import requests
-    webhook_url = "${base}/api/odoo/webhook"
-    api_key = "PASTE_YOUR_INTEGRATION_KEY"
-    headers = {"Content-Type": "application/json", "x-api-key": api_key}
-    payload = {"action": "pull", "odooInvoiceId": record.id}
-    try:
-        r = requests.post(webhook_url, headers=headers, json=payload, timeout=15)
-        res = r.json()
-        if r.status_code != 200 or not res.get('success'):
-            record.write({'x_zatca_status':'failed','x_zatca_error':res.get('error','Unknown error')})
-    except Exception as e:
-        record.write({'x_zatca_status':'failed','x_zatca_error':'Timeout: '+str(e)})`;
+function OdooGuide({ base, apiKey }: { base: string; apiKey?: string }) {
+  const hookUrl = `${base}/api/odoo/webhook?apiKey=${apiKey || "<generate your key in ① first>"}`;
   return (
     <>
       <div style={card}>
@@ -275,27 +262,20 @@ if record.move_type in ['out_invoice','out_refund'] and record.state == 'posted'
       </div>
       <div style={card}>
         <h4 style={{ margin: "0 0 6px" }}>③ Make it automatic in Odoo (one-time, ~5 min)</h4>
-        <p style={hint}>This creates two things in Odoo: a <b>Server Action</b> (the code that calls this middleware) and an <b>Automated Action</b> (runs that code whenever an invoice is posted). The code only runs for posted customer invoices/refunds not already cleared, and re-runs are safe — so it won&apos;t clash or double-file.</p>
+        <p style={hint}>Create a <b>Server Action</b> that sends each posted invoice to this middleware, and an <b>Automated Action</b> that runs it. We use Odoo&apos;s native <b>Send Webhook Notification</b> — Odoo&apos;s &quot;Execute Code&quot; sandbox blocks <code>import</code> (the &quot;forbidden opcode&quot; error), so a webhook action is the reliable, no-code way.</p>
 
-        <details style={{ margin: "8px 0 14px", fontSize: 12.5 }}>
-          <summary style={{ cursor: "pointer", color: "#6b7785" }}>Already set up ZATCA in Odoo before? (optional — most people skip this)</summary>
-          <div style={{ padding: "10px 12px", marginTop: 6, background: "#f7f9fc", border: "1px solid #e3e8ef", borderRadius: 8, color: "#3a4a5a", lineHeight: 1.6 }}>
-            If you already have a ZATCA auto-clearance action (type <i>Send Webhook Notification</i>) from a prior setup, reuse it instead of making a new one: open it and set its <b>URL</b> to <code>{base}/api/odoo/webhook?apiKey=&lt;your key from ①&gt;</code> (the key goes in the URL since that action type sends no headers; the middleware accepts Odoo&apos;s native payload). Make sure its Automated Action trigger (posted invoices) is active, then you can skip A &amp; B.
-          </div>
-        </details>
-
-        <p style={{ fontWeight: 700, margin: "14px 0 4px", color: "#155a93" }}>A. Create the Server Action (the code)</p>
+        <p style={{ fontWeight: 700, margin: "14px 0 4px", color: "#155a93" }}>A. Create the Server Action</p>
         <ol style={ol}>
           <li style={{ margin: "7px 0" }}>If you don&apos;t see <b>Technical</b>: Settings → scroll to the bottom → <b>Activate the developer mode</b>.</li>
           <li style={{ margin: "7px 0" }}>Go to <b>Settings → Technical → Actions → Server Actions</b> → <b>New</b>.</li>
-          <li style={{ margin: "7px 0" }}><b>Name</b> (the &quot;Set an explicit name&quot; box): type <code>ZATCA Auto-Clearance</code>.</li>
-          <li style={{ margin: "7px 0" }}><b>Model</b>: click it and choose <b>Journal Entry</b> (technical name <code>account.move</code>). ⚠️ Change it from the default <i>&quot;Account&quot;</i> — this is the #1 mistake.</li>
-          <li style={{ margin: "7px 0" }}><b>Type</b>: click the <b>Execute Code</b> button.</li>
-          <li style={{ margin: "7px 0" }}>A <b>Code</b> tab/box appears. Paste exactly this, then replace <code>PASTE_YOUR_INTEGRATION_KEY</code> with your key from ① above:</li>
-        </ol>
-        <pre style={codeBox}>{py}</pre>
-        <ol style={ol} start={7}>
-          <li style={{ margin: "7px 0" }}><b>Save</b> (the cloud / save icon, top-left).</li>
+          <li style={{ margin: "7px 0" }}><b>Name</b>: <code>ZATCA Auto-Clearance</code>.</li>
+          <li style={{ margin: "7px 0" }}><b>Model</b>: choose <b>Journal Entry</b> (technical name <code>account.move</code>) — not the default <i>&quot;Account&quot;</i>.</li>
+          <li style={{ margin: "7px 0" }}><b>Type</b>: click <b>Send Webhook Notification</b>.</li>
+          <li style={{ margin: "7px 0" }}><b>URL</b> field — paste this (your key is already embedded):
+            <div style={copybox}>{hookUrl}</div>
+            <span style={hint}>The key rides in the URL because webhook actions can&apos;t send custom headers; Odoo posts its native record payload, which the middleware reads.</span>
+          </li>
+          <li style={{ margin: "7px 0" }}><b>Save</b> (the cloud / save icon).</li>
         </ol>
 
         <p style={{ fontWeight: 700, margin: "16px 0 4px", color: "#155a93" }}>B. Create the Automated Action (the trigger)</p>
@@ -304,16 +284,19 @@ if record.move_type in ['out_invoice','out_refund'] and record.state == 'posted'
           <li style={{ margin: "7px 0" }}><b>Name</b>: <code>ZATCA on Posted Invoice</code>.</li>
           <li style={{ margin: "7px 0" }}><b>Model</b>: <b>Journal Entry</b> (<code>account.move</code>).</li>
           <li style={{ margin: "7px 0" }}><b>Trigger</b>: select <b>On Save</b> (older Odoo calls it <b>On Update</b>).</li>
-          <li style={{ margin: "7px 0" }}><b>Apply on / Domain</b>: set <code>[(&quot;state&quot;,&quot;=&quot;,&quot;posted&quot;)]</code> (so it only fires for posted invoices).</li>
-          <li style={{ margin: "7px 0" }}><b>Actions To Do</b> → add → pick the <b>ZATCA Auto-Clearance</b> server action you made in A.</li>
+          <li style={{ margin: "7px 0" }}><b>Apply on / Domain</b>: <code>[(&quot;state&quot;,&quot;=&quot;,&quot;posted&quot;)]</code> (only posted invoices).</li>
+          <li style={{ margin: "7px 0" }}><b>Actions To Do</b> → add → pick <b>ZATCA Auto-Clearance</b> from step A.</li>
           <li style={{ margin: "7px 0" }}><b>Save.</b></li>
         </ol>
 
-        <div style={{ background: "#f3f6fa", borderLeft: "3px solid #1F6FB2", padding: "8px 12px", borderRadius: "0 6px 6px 0", fontSize: 12.5, color: "#3a4a5a", margin: "12px 0" }}>
-          <b>Already have a ZATCA action set up?</b> Don&apos;t add a duplicate — just open the existing Server Action and update its <code>webhook_url</code> and <code>api_key</code> to the values shown here. Re-posting an invoice is safe: the code skips anything already <code>cleared</code>, and this middleware de-duplicates by invoice number, so there&apos;s no clash and nothing gets filed twice.
-        </div>
+        <details style={{ margin: "8px 0", fontSize: 12.5 }}>
+          <summary style={{ cursor: "pointer", color: "#6b7785" }}>Already had a ZATCA action from a previous setup? (optional)</summary>
+          <div style={{ padding: "10px 12px", marginTop: 6, background: "#f7f9fc", border: "1px solid #e3e8ef", borderRadius: 8, color: "#3a4a5a", lineHeight: 1.6 }}>
+            Reuse it instead of creating a new one — open it and set its <b>URL</b> to the value above. No duplicate, no clash.
+          </div>
+        </details>
 
-        <p style={hint}><b>Test it:</b> open a draft customer invoice in Odoo and click <b>Confirm</b> (post it). Within a few seconds its <code>x_zatca_status</code> becomes <code>cleared</code>/<code>reported</code> with a QR + UUID written back — and it appears on your Dashboard here.</p>
+        <p style={hint}><b>Test:</b> open a draft customer invoice in Odoo → <b>Confirm</b> (post it). In a few seconds its <code>x_zatca_status</code> becomes <code>cleared</code>/<code>reported</code> with a QR + UUID, and it shows on your Dashboard here. The middleware de-duplicates by invoice number, so the same invoice won&apos;t create duplicate records.</p>
       </div>
     </>
   );
