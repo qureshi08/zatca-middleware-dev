@@ -83,7 +83,23 @@ export async function saveZohoConnection(fd: FormData) {
   const orgIdField = field(fd, "zoho_org_id");
   const clientId = field(fd, "zoho_client_id");
   const clientSecret = field(fd, "zoho_client_secret");
-  const refreshToken = field(fd, "zoho_refresh_token");
+  let refreshToken = field(fd, "zoho_refresh_token");
+  const grantCode = field(fd, "zoho_grant_code");
+
+  // If the user pasted a Self-Client grant code (the easy path) instead of a
+  // refresh token, exchange it for one server-side — no manual curl needed.
+  if (!refreshToken && grantCode) {
+    try {
+      const exchanger = new ZohoClient({ zohoRegion: region, zohoOrgId: orgIdField, zohoClientId: clientId, zohoClientSecret: clientSecret });
+      refreshToken = await exchanger.exchangeGrantCode(grantCode);
+    } catch (e) {
+      redirect(`/onboarding?step=3&cerr=${encodeURIComponent(e instanceof Error ? e.message : "Grant-code exchange failed")}`);
+    }
+  }
+
+  if (!refreshToken) {
+    redirect(`/onboarding?step=3&cerr=${encodeURIComponent("Provide a Self-Client grant code (recommended) or an existing refresh token.")}`);
+  }
 
   const zoho = new ZohoClient({ zohoRegion: region, zohoOrgId: orgIdField, zohoClientId: clientId, zohoClientSecret: clientSecret, zohoRefreshToken: refreshToken });
   const test = await zoho.testConnection();

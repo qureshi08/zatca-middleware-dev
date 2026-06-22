@@ -100,6 +100,41 @@ export class ZohoClient {
     }
 
     /**
+     * Exchanges a Self-Client grant code (short-lived authorization code) for a
+     * long-lived refresh token — so the operator never has to run the curl/Postman
+     * token exchange by hand. Self-Client codes don't use a redirect URI.
+     */
+    async exchangeGrantCode(code: string): Promise<string> {
+        if (!this.clientId || !this.clientSecret) {
+            throw new Error('Zoho Client ID and Client Secret are required to exchange the grant code.');
+        }
+        const params = new URLSearchParams({
+            grant_type: 'authorization_code',
+            client_id: this.clientId,
+            client_secret: this.clientSecret,
+            code: code.trim(),
+        });
+
+        const res = await fetch(`${this.accountsHost}/oauth/v2/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString(),
+            cache: 'no-store',
+        });
+        const json = await res.json().catch(() => ({}));
+
+        if (!res.ok || !json.refresh_token) {
+            const detail = json.error || `${res.status} ${res.statusText}`;
+            // The most common cause is a wrong data center (region) or an expired code.
+            throw new Error(
+                `Zoho grant-code exchange failed: ${detail}. ` +
+                `Check the region matches your Zoho data center, and remember grant codes expire in minutes — regenerate and retry.`
+            );
+        }
+        return json.refresh_token as string;
+    }
+
+    /**
      * Performs an authenticated REST call against the Zoho Books v3 API.
      * `path` is everything after `/books/v3` (e.g. `/invoices/123`).
      */

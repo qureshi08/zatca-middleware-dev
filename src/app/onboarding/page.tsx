@@ -55,6 +55,11 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   "zohoInvoiceId": "\${invoice.invoice_id}",
   "entityType": "invoice"
 }`;
+  const zohoCnBody = `{
+  "action": "pull",
+  "zohoInvoiceId": "\${creditnote.creditnote_id}",
+  "entityType": "creditnote"
+}`;
 
   return (
     <div style={{ padding: "28px 32px", maxWidth: 880 }}>
@@ -149,7 +154,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
 
               <KeyBlock newkey={sp.newkey} />
 
-              {integration === "zoho" && <ZohoGuide base={base} zohoBody={zohoBody} />}
+              {integration === "zoho" && <ZohoGuide base={base} zohoBody={zohoBody} zohoCnBody={zohoCnBody} />}
               {integration === "odoo" && <OdooGuide base={base} apiKey={sp.newkey} connected={connected} />}
               {integration === "custom" && (
                 <div style={card}><h4 style={{ margin: "0 0 8px" }}>Call our API</h4><div style={copybox}>POST {base}/api/v1/zatca/invoices/submit</div><p style={hint}>Use your integration key (above) as <code>x-api-key</code>. Generating a key marks this connected.</p></div>
@@ -160,9 +165,15 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
                 <div style={card}>
                   <h4 style={{ margin: "0 0 6px" }}>Connection details — verified live</h4>
                   <form action={saveZohoConnection}>
-                    <div style={row}><div style={{ flex: 1 }}><label style={label}>Region</label><input style={input} name="zoho_region" defaultValue="sa" /></div><div style={{ flex: 1 }}><label style={label}>Organization ID</label><input style={input} name="zoho_org_id" required /></div></div>
+                    <div style={row}><div style={{ flex: 1 }}><label style={label}>Region</label><input style={input} name="zoho_region" defaultValue="sa" /><p style={hint}>Zoho data center: sa, com, eu, in, com.au, jp, ca.</p></div><div style={{ flex: 1 }}><label style={label}>Organization ID</label><input style={input} name="zoho_org_id" required /></div></div>
                     <div style={row}><div style={{ flex: 1 }}><label style={label}>Client ID</label><input style={input} name="zoho_client_id" required /></div><div style={{ flex: 1 }}><label style={label}>Client secret</label><input style={input} name="zoho_client_secret" type="password" required /></div></div>
-                    <label style={label}>Refresh token</label><input style={input} name="zoho_refresh_token" type="password" required />
+                    <label style={label}>Grant code <span style={{ color: "#1f9d57" }}>(recommended — we exchange it for you)</span></label>
+                    <input style={input} name="zoho_grant_code" placeholder="1000.xxxxxxxx… from Self Client → Generate Code" />
+                    <p style={hint}>From api-console.zoho → your Self Client → <b>Generate Code</b>, scope <code>ZohoBooks.fullaccess.all</code>. Codes expire in minutes — generate it right before connecting.</p>
+                    <details style={{ marginTop: 6 }}>
+                      <summary style={{ cursor: "pointer", color: "#6b7785", fontSize: 12.5 }}>Already have a refresh token? Use it instead</summary>
+                      <label style={label}>Refresh token</label><input style={input} name="zoho_refresh_token" type="password" />
+                    </details>
                     <button type="submit" style={{ ...btn, marginTop: 16 }}>Test &amp; connect →</button>
                   </form>
                 </div>
@@ -232,17 +243,22 @@ function KeyBlock({ newkey }: { newkey?: string }) {
   );
 }
 
-function ZohoGuide({ base, zohoBody }: { base: string; zohoBody: string }) {
+function ZohoGuide({ base, zohoBody, zohoCnBody }: { base: string; zohoBody: string; zohoCnBody: string }) {
   return (
     <div style={card}>
       <h4 style={{ margin: "0 0 8px" }}>② Set up Zoho Books (do this in Zoho)</h4>
+      <p style={hint}>Zoho Books has no API to create webhooks or custom fields, so these few steps are done once in Zoho&apos;s UI. We handle the rest (incl. turning your grant code into a refresh token).</p>
       <ol style={ol}>
-        <li style={{ margin: "10px 0" }}><b>OAuth credentials.</b> <a href="https://api-console.zoho.sa" target="_blank" rel="noreferrer">api-console.zoho.sa</a> → Self Client → grant token scope <code>ZohoBooks.fullaccess.all</code> → exchange for a refresh token. Organization ID is under Zoho Books → Settings → Organizations.</li>
-        <li style={{ margin: "10px 0" }}><b>Custom fields</b> (Settings → Preferences → Invoices → Field Customization): <code>cf_zatca_uuid</code> (Text), <code>cf_zatca_status</code> (Text/Dropdown), <code>cf_zatca_qr_code</code> (Multi-line), <code>cf_zatca_error</code> (Multi-line).</li>
-        <li style={{ margin: "10px 0" }}><b>Webhook</b> (Settings → Automation → Workflow Rules → on Invoices created/sent → Webhook):
+        <li style={{ margin: "10px 0" }}><b>OAuth credentials.</b> At <a href="https://api-console.zoho.com" target="_blank" rel="noreferrer">api-console.zoho.com</a> (use the console for your data center) → <b>Self Client</b> → copy the <b>Client ID</b> &amp; <b>Client Secret</b>. Then open the <b>Generate Code</b> tab, scope <code>ZohoBooks.fullaccess.all</code>, pick a duration, and copy the <b>grant code</b>. Paste Client ID/Secret + grant code into the form below — we exchange it for a refresh token automatically. Organization ID is under Zoho Books → Settings → Organizations.</li>
+        <li style={{ margin: "10px 0" }}><b>Custom fields</b> (Settings → Preferences → <b>Invoices</b> → Field Customization, and repeat for <b>Credit Notes</b>): <code>cf_zatca_uuid</code> (Text), <code>cf_zatca_status</code> (Text/Dropdown), <code>cf_zatca_qr_code</code> (Multi-line), <code>cf_zatca_error</code> (Multi-line). Optional — write-back also posts a comment + attaches the PDF even without these.</li>
+        <li style={{ margin: "10px 0" }}><b>Webhook for invoices</b> (Settings → Automation → Workflow Rules → on <b>Invoices</b>, created/sent → Webhook):
           <div style={hint}>URL (POST):</div><div style={copybox}>{base}/api/zoho/webhook</div>
           <div style={hint}>Header:</div><div style={copybox}>x-api-key: &lt;your integration key from ①&gt;</div>
           <div style={hint}>Body:</div><pre style={codeBox}>{zohoBody}</pre>
+        </li>
+        <li style={{ margin: "10px 0" }}><b>Webhook for credit notes</b> (same place, but a Workflow Rule on the <b>Credit Notes</b> module) — so 381 adjustments clear too. Same URL &amp; header; body uses the credit-note id:
+          <div style={hint}>Body:</div><pre style={codeBox}>{zohoCnBody}</pre>
+          <span style={hint}>Debit notes (383): if you issue them as an invoice subtype, the invoice webhook already covers them; the middleware detects the debit type and references the original.</span>
         </li>
       </ol>
     </div>
