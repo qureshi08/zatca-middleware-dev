@@ -177,6 +177,13 @@ export async function POST(req: NextRequest) {
                 .maybeSingle();
 
             if (configError || !config) {
+                await supabaseAdmin.from('transaction_logs').insert({
+                    organization_id: organization.id,
+                    request_type: 'clearance',
+                    invoice_number: `Zoho#${zohoInvoiceId}`,
+                    status: 'failure',
+                    response_payload: { error: 'Zoho Books integration is not configured.', stage: 'config', source: 'zoho' }
+                });
                 return NextResponse.json({
                     error: 'Zoho Books integration is not configured. Please complete setup in the dashboard.'
                 }, { status: 400 });
@@ -196,6 +203,13 @@ export async function POST(req: NextRequest) {
             try {
                 zohoInvoice = await zoho.getInvoice(String(zohoInvoiceId), entityType);
             } catch (err: any) {
+                await supabaseAdmin.from('transaction_logs').insert({
+                    organization_id: organization.id,
+                    request_type: 'clearance',
+                    invoice_number: `Zoho#${zohoInvoiceId}`,
+                    status: 'failure',
+                    response_payload: { error: `Failed to fetch document from Zoho Books: ${err.message}`, stage: 'pull', source: 'zoho' }
+                });
                 return NextResponse.json({
                     error: `Failed to fetch document from Zoho Books: ${err.message}`
                 }, { status: 422 });

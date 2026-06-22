@@ -250,7 +250,17 @@ function ZohoGuide({ base, apiKey, connected }: { base: string; apiKey?: string;
             </span>
           </div>
           <form action={saveZohoConnection}>
-            <div style={row}><div style={{ flex: 1 }}><label style={label}>Region</label><input style={input} name="zoho_region" defaultValue="sa" /><p style={hint}>Zoho data center: sa, com, eu, in, com.au, jp, ca.</p></div><div style={{ flex: 1 }}><label style={label}>Organization ID</label><input style={input} name="zoho_org_id" required /></div></div>
+            <div style={row}><div style={{ flex: 1 }}><label style={label}>Region</label>
+              <select style={input} name="zoho_region" defaultValue="sa">
+                <option value="sa">sa — Saudi Arabia (.sa)</option>
+                <option value="com">com — US / global (.com)</option>
+                <option value="eu">eu — Europe (.eu)</option>
+                <option value="in">in — India (.in)</option>
+                <option value="com.au">com.au — Australia</option>
+                <option value="jp">jp — Japan (.jp)</option>
+                <option value="ca">ca — Canada</option>
+              </select>
+              <p style={hint}>Match your Zoho Books URL: <code>books.zoho.<b>sa</b></code> → sa, <code>.com</code> → com.</p></div><div style={{ flex: 1 }}><label style={label}>Organization ID</label><input style={input} name="zoho_org_id" required /></div></div>
             <div style={row}><div style={{ flex: 1 }}><label style={label}>Client ID</label><input style={input} name="zoho_client_id" required /></div><div style={{ flex: 1 }}><label style={label}>Client secret</label><input style={input} name="zoho_client_secret" type="password" required /></div></div>
             <label style={label}>Grant code <span style={{ color: "#1f9d57" }}>(recommended — we exchange it for you)</span></label>
             <input style={input} name="zoho_grant_code" placeholder="1000.xxxxxxxx… from Self Client → Generate Code" />

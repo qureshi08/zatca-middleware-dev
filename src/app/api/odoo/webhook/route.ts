@@ -152,6 +152,13 @@ export async function POST(req: NextRequest) {
                 .maybeSingle();
 
             if (configError || !config) {
+                await supabaseAdmin.from('transaction_logs').insert({
+                    organization_id: organization.id,
+                    request_type: 'clearance',
+                    invoice_number: `Odoo#${odooInvoiceId}`,
+                    status: 'failure',
+                    response_payload: { error: 'Odoo integration is not configured.', stage: 'config', source: 'odoo' }
+                });
                 return NextResponse.json({
                     error: 'Odoo integration is not configured. Please complete setup in the dashboard.'
                 }, { status: 400 });
@@ -170,6 +177,13 @@ export async function POST(req: NextRequest) {
             try {
                 odooInvoice = await odoo.getInvoice(Number(odooInvoiceId));
             } catch (err: any) {
+                await supabaseAdmin.from('transaction_logs').insert({
+                    organization_id: organization.id,
+                    request_type: 'clearance',
+                    invoice_number: `Odoo#${odooInvoiceId}`,
+                    status: 'failure',
+                    response_payload: { error: `Failed to fetch invoice from Odoo: ${err.message}`, stage: 'pull', source: 'odoo' }
+                });
                 return NextResponse.json({
                     error: `Failed to fetch invoice from Odoo: ${err.message}`
                 }, { status: 422 });
