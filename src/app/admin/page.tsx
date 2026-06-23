@@ -34,13 +34,16 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     .limit(200);
   const tenants = orgs ?? [];
 
-  // Support inbox
+  // Support inbox. Note: no `organizations(name)` embed — support_requests has
+  // no FK to organizations (intentional, so the migration runs standalone), so
+  // we resolve the business name from the tenants list above instead.
+  const orgNameById = new Map(tenants.map((t) => [t.id, t.name]));
   let requests: any[] = [];
   let tableMissing = false;
   try {
     const { data, error } = await supabaseAdmin
       .from("support_requests")
-      .select("id,category,subject,message,requested_software,status,admin_note,user_email,created_at,organizations(name)")
+      .select("id,category,subject,message,requested_software,status,admin_note,user_email,organization_id,created_at")
       .order("created_at", { ascending: false })
       .limit(100);
     if (error) tableMissing = true;
@@ -77,7 +80,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 <span style={{ fontWeight: 600, fontSize: 14 }}>{r.subject}</span>
                 <span style={pill(r.status)}>{r.status.replace("_", " ")}</span>
                 <span style={{ color: "#5a6b7b", fontSize: 12 }}>{r.category.replace("_", " ")}{r.requested_software ? ` · ${r.requested_software}` : ""}</span>
-                <span style={{ marginLeft: "auto", color: "#8a97a6", fontSize: 12 }}>{r.organizations?.name || "—"} · {r.user_email || "—"} · {new Date(r.created_at).toLocaleString()}</span>
+                <span style={{ marginLeft: "auto", color: "#8a97a6", fontSize: 12 }}>{orgNameById.get(r.organization_id) || "—"} · {r.user_email || "—"} · {new Date(r.created_at).toLocaleString()}</span>
               </div>
               <div style={{ color: "#33414f", fontSize: 13, marginTop: 6, whiteSpace: "pre-wrap" }}>{r.message}</div>
               <form action={updateSupportRequestStatus} style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10, flexWrap: "wrap" }}>
