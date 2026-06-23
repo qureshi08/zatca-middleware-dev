@@ -1,14 +1,12 @@
 /**
  * Platform admin (a.k.a. middleware support staff) — NOT a tenant role.
  * These are our own support/operations people who can see all tenants and
- * handle support requests. Controlled by the ADMIN_EMAILS env var
- * (comma-separated). Defaults to the founding support address so it works
- * out of the box; override in Vercel for production.
+ * handle support requests. Controlled entirely by the ADMIN_EMAILS env var
+ * (comma-separated list of support-staff emails). No hardcoded default — if
+ * unset, nobody is an admin (secure by default).
  */
-const DEFAULT_ADMINS = "claude.ai@convergentbt.com";
-
 export function adminEmails(): string[] {
-  return (process.env.ADMIN_EMAILS || DEFAULT_ADMINS)
+  return (process.env.ADMIN_EMAILS || "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
