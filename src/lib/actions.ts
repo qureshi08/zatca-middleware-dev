@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { getActiveOrg } from "@/lib/org";
+import { getCurrentUser } from "@/lib/supabase/server";
+import { isPlatformAdmin } from "@/lib/admin";
 import { encryptSecret, decryptSecret } from "@/lib/secrets";
 import { completeOnboarding } from "@/lib/zatca/onboarding";
 import { generateInvoiceAction } from "@/lib/zatca/actions";
@@ -373,6 +375,61 @@ export async function toggleAutoSubmit(fd: FormData) {
   await supabaseAdmin.from(table).update({ auto_submit: next }).eq("organization_id", org.id);
   revalidatePath("/settings");
   redirect("/settings");
+}
+
+// ===========================================================================
+// SUPPORT — customers contact middleware support; platform admins triage.
+// ===========================================================================
+
+/** Submit a support request (help, integration request, bug, billing). */
+export async function submitSupportRequest(fd: FormData) {
+  const org = await requireOrg();
+  const user = await getCurrentUser();
+  const category = field(fd, "category") || "general";
+  const subject = field(fd, "subject");
+  const message = field(fd, "message");
+  const requestedSoftware = field(fd, "requested_software");
+
+  if (!subject || !message) {
+    redirect(`/support?err=${encodeURIComponent("Subject and message are required.")}`);
+  }
+
+  const { error } = await supabaseAdmin.from("support_requests").insert({
+    organization_id: org.id,
+    user_email: user?.email ?? null,
+    category,
+    subject,
+    message,
+    requested_software: category === "integration_request" ? requestedSoftware || null : null,
+    status: "open",
+  });
+
+  revalidatePath("/support");
+  if (error) {
+    redirect(`/support?err=${encodeURIComponent(error.message.includes("support_requests") ? "Support isn’t set up yet — run supabase_support_requests.sql." : error.message)}`);
+  }
+  redirect("/support?sent=1");
+}
+
+/** Platform-admin only: update a support request's status / note. */
+export async function updateSupportRequestStatus(fd: FormData) {
+  const user = await getCurrentUser();
+  if (!isPlatformAdmin(user?.email)) throw new Error("Not authorized");
+  const id = field(fd, "id");
+  const status = field(fd, "status");
+  const adminNote = field(fd, "admin_note");
+  if (id) {
+    await supabaseAdmin
+      .from("support_requests")
+      .update({
+        ...(status ? { status } : {}),
+        ...(adminNote ? { admin_note: adminNote } : {}),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+  }
+  revalidatePath("/admin");
+  redirect("/admin?msg=Updated");
 }
 
 /** Re-test the stored connection and refresh status + last_sync (no re-entry needed). */

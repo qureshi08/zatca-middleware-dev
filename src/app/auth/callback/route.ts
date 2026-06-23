@@ -9,6 +9,9 @@ import { ensureTenant } from "@/lib/tenant";
 export async function GET(req: NextRequest) {
   const { searchParams, origin } = req.nextUrl;
   const code = searchParams.get("code");
+  const nextParam = searchParams.get("next") || "/";
+  // Only allow internal redirects (no open-redirect).
+  const next = nextParam.startsWith("/") ? nextParam : "/";
 
   if (code) {
     const supabase = await createSupabaseServerClient();
@@ -21,5 +24,5 @@ export async function GET(req: NextRequest) {
       }
     }
   }
-  return NextResponse.redirect(`${origin}/`);
+  return NextResponse.redirect(`${origin}${next}`);
 }

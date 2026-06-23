@@ -3,6 +3,7 @@ import './globals.css';
 import Sidebar from '@/components/Sidebar';
 import { AppProvider } from '@/context/AppContext';
 import { getCurrentUser } from '@/lib/supabase/server';
+import { isPlatformAdmin } from '@/lib/admin';
 
 export const metadata: Metadata = {
   title: 'ZATCA Middleware – Phase 2 E-Invoicing Platform',
@@ -25,7 +26,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <AppProvider>
           {user ? (
             <div className="app-shell" style={{ display: "flex", minHeight: "100vh" }}>
-              <Sidebar />
+              <Sidebar email={user.email ?? undefined} isAdmin={isPlatformAdmin(user.email)} />
               <div className="main-content" style={{ flex: 1, minWidth: 0 }}>{children}</div>
             </div>
           ) : (

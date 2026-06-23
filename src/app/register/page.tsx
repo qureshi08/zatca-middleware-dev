@@ -1,176 +1,113 @@
-'use client';
+"use client";
 
-import { Suspense, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import AuthShell, { authInput, authLabel, authBtn, authGhostBtn } from "@/components/AuthShell";
 
-/**
- * INSTITUTIONAL REGISTRATION
- * Supports an optional ?intent=zoho query so Zoho-initiated
- * registrations land on the Zoho onboarding flow after the first sign-in
- * rather than the generic dashboard.
- */
+function GoogleIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 48 48" aria-hidden>
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8a12 12 0 1 1 7.9-21l5.7-5.7A20 20 0 1 0 24 44c11 0 20-9 20-20 0-1.3-.1-2.3-.4-3.5z" />
+      <path fill="#FF3D00" d="m6.3 14.7 6.6 4.8A12 12 0 0 1 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7A20 20 0 0 0 6.3 14.7z" />
+      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2A12 12 0 0 1 12.7 28l-6.6 5C9.5 39.6 16.2 44 24 44z" />
+      <path fill="#1976D2" d="M43.6 20.5H24v8h11.3a12 12 0 0 1-4.1 5.6l6.2 5.2C41.4 36.3 44 30.7 44 24c0-1.3-.1-2.3-.4-3.5z" />
+    </svg>
+  );
+}
 
-function RegisterContent() {
-    const router = useRouter();
-    const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        bankName: '',
-        taxNumber: '',
-        vatNumber: '',
-        email: '',
-        password: ''
+function RegisterInner() {
+  const router = useRouter();
+  const sp = useSearchParams();
+  const next = sp.get("next") || "/onboarding";
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [gLoading, setGLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState<string | null>(null);
+
+  const emailSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (password !== confirm) { setError("Passwords don’t match."); return; }
+    setLoading(true);
+    const supabase = createSupabaseBrowserClient();
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
     });
-    const [error, setError] = useState<string | null>(null);
-    const [details, setDetails] = useState<string | null>(null);
+    if (error) { setError(error.message); setLoading(false); return; }
+    // If email confirmation is OFF, a session is returned → go straight in.
+    if (data.session) { router.push(next); router.refresh(); return; }
+    // Otherwise prompt to confirm via email.
+    setSent(email.trim());
+    setLoading(false);
+  };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
-        setDetails(null);
+  const googleSignUp = async () => {
+    setGLoading(true); setError(null);
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
+    });
+    if (error) { setError(error.message); setGLoading(false); }
+  };
 
-        try {
-            const res = await fetch('/api/v1/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            });
-
-            const data = await res.json();
-            if (!res.ok) {
-                setError(data.error || 'Registration failed');
-                setDetails(data.details || 'No additional details provided.');
-                return;
-            }
-
-            // Always forward to Zoho Settings after registration/login for this integration
-            const next = '/admin/zoho/settings';
-            const params = new URLSearchParams({ registered: 'true', next });
-            router.push(`/login?${params.toString()}`);
-        } catch (err: any) {
-            setError('Network Protocol Error');
-            setDetails(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
+  if (sent) {
     return (
-        <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center p-6 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full opacity-20">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-600/20 rounded-full blur-[120px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-600/20 rounded-full blur-[120px]" />
-            </div>
-
-            <div className="w-full max-w-xl relative z-10">
-                <div className="text-center mb-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[10px] font-black uppercase tracking-widest mb-4">
-                        <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
-                        Zoho Books Integration
-                    </div>
-                    <h1 className="text-4xl font-extrabold text-white tracking-tight mb-2">
-                        Register Your Business
-                    </h1>
-                    <p className="text-gray-400 text-sm">
-                        Create your tenant on the ZATCA Middleware. After this you'll run ZATCA compliance and then connect Zoho Books.
-                    </p>
-                </div>
-
-                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-10 shadow-2xl">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        {error && (
-                            <div className="space-y-2">
-                                <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-black p-4 rounded-xl text-center uppercase tracking-widest">
-                                    {error}
-                                </div>
-                                {details && (
-                                    <div className="bg-black/40 p-3 rounded-lg border border-white/5 font-mono text-[10px] text-gray-400 break-all">
-                                        DEBUG_DETAILS: {details}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest pl-1">Business Name</label>
-                                <input
-                                    required
-                                    type="text"
-                                    placeholder="Your Saudi Trading Company"
-                                    className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm focus:border-orange-500 outline-none transition-all"
-                                    value={formData.bankName}
-                                    onChange={e => setFormData({ ...formData, bankName: e.target.value })}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest pl-1">Tax ID (TIN)</label>
-                                <input
-                                    required
-                                    type="text"
-                                    placeholder="1010010000"
-                                    className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm focus:border-orange-500 outline-none transition-all"
-                                    value={formData.taxNumber}
-                                    onChange={e => setFormData({ ...formData, taxNumber: e.target.value })}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest pl-1">VAT Number</label>
-                            <input
-                                required
-                                type="text"
-                                placeholder="399999999900003"
-                                className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm focus:border-orange-500 outline-none transition-all"
-                                value={formData.vatNumber}
-                                onChange={e => setFormData({ ...formData, vatNumber: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="h-px bg-white/10 my-4" />
-
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest pl-1">Admin Email</label>
-                            <input
-                                required
-                                type="email"
-                                placeholder="admin@mycompany.com"
-                                className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm focus:border-orange-500 outline-none transition-all"
-                                value={formData.email}
-                                onChange={e => setFormData({ ...formData, email: e.target.value })}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest pl-1">Password</label>
-                            <input
-                                required
-                                type="password"
-                                placeholder="••••••••"
-                                className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm focus:border-orange-500 outline-none transition-all"
-                                value={formData.password}
-                                onChange={e => setFormData({ ...formData, password: e.target.value })}
-                            />
-                        </div>
-
-                        <button
-                            disabled={loading}
-                            className="w-full h-14 text-white font-bold rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 bg-orange-600 hover:bg-orange-500 shadow-orange-500/20"
-                        >
-                            {loading ? 'Initializing Context...' : 'Complete Registration →'}
-                        </button>
-                    </form>
-                </div>
-            </div>
+      <AuthShell title="Confirm your email" subtitle={`We sent a confirmation link to ${sent}.`}>
+        <div style={{ background: "#eef5fc", border: "1px solid #bcd9f2", color: "#155a93", fontSize: 13, padding: "12px 14px", borderRadius: 9 }}>
+          Click the link in that email to activate your account, then sign in. Didn&apos;t get it? Check spam, or <Link href="/register" style={{ color: "#1F6FB2", fontWeight: 600 }}>try again</Link>.
         </div>
+        <p style={{ textAlign: "center", marginTop: 16, marginBottom: 0 }}><Link href="/login" style={{ color: "#1F6FB2", fontWeight: 600, fontSize: 13 }}>← Back to sign in</Link></p>
+      </AuthShell>
     );
+  }
+
+  return (
+    <AuthShell title="Create your account" subtitle="Get ZATCA-compliant without leaving the software you already use.">
+      {error && <div style={{ background: "#fdeee9", border: "1px solid #f0c0b3", color: "#c0392b", fontSize: 12.5, padding: "9px 11px", borderRadius: 8, marginBottom: 14 }}>{error}</div>}
+
+      <form onSubmit={emailSignUp}>
+        <label style={authLabel}>Work email</label>
+        <input style={authInput} type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" />
+        <label style={{ ...authLabel, marginTop: 14 }}>Password</label>
+        <input style={authInput} type="password" autoComplete="new-password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
+        <label style={{ ...authLabel, marginTop: 14 }}>Confirm password</label>
+        <input style={authInput} type="password" autoComplete="new-password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Re-enter password" />
+        <button type="submit" disabled={loading} style={{ ...authBtn, marginTop: 18, opacity: loading ? 0.6 : 1 }}>{loading ? "Creating account…" : "Create account"}</button>
+      </form>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "18px 0" }}>
+        <div style={{ flex: 1, height: 1, background: "#e3e8ef" }} />
+        <span style={{ color: "#8a97a6", fontSize: 12 }}>or</span>
+        <div style={{ flex: 1, height: 1, background: "#e3e8ef" }} />
+      </div>
+
+      <button type="button" onClick={googleSignUp} disabled={gLoading} style={{ ...authGhostBtn, opacity: gLoading ? 0.6 : 1 }}>
+        <GoogleIcon /> {gLoading ? "Redirecting…" : "Sign up with Google"}
+      </button>
+
+      <p style={{ textAlign: "center", color: "#6b7785", fontSize: 13, marginTop: 18, marginBottom: 0 }}>
+        Already have an account? <Link href="/login" style={{ color: "#1F6FB2", fontWeight: 600 }}>Sign in</Link>
+      </p>
+      <p style={{ textAlign: "center", color: "#9aa6b2", fontSize: 11, marginTop: 10, marginBottom: 0 }}>
+        You&apos;ll add your business details (VAT, CR) during onboarding.
+      </p>
+    </AuthShell>
+  );
 }
 
 export default function RegisterPage() {
-    return (
-        <Suspense fallback={<div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center text-white">Initializing…</div>}>
-            <RegisterContent />
-        </Suspense>
-    );
+  return (
+    <Suspense fallback={<AuthShell title="Create your account"><div style={{ color: "#8a97a6", fontSize: 13 }}>Loading…</div></AuthShell>}>
+      <RegisterInner />
+    </Suspense>
+  );
 }

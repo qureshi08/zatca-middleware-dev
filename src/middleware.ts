@@ -28,16 +28,21 @@ export async function middleware(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   const path = req.nextUrl.pathname;
   const isPublic =
-    path.startsWith("/login") || path.startsWith("/auth") || path.startsWith("/api");
+    path.startsWith("/login") || path.startsWith("/register") ||
+    path.startsWith("/auth") || path.startsWith("/api");
 
   if (!user && !isPublic) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
+    // Preserve where they were headed so we can return after sign-in.
+    if (path && path !== "/") url.searchParams.set("next", path);
     return NextResponse.redirect(url);
   }
-  if (user && path === "/login") {
+  // Signed-in users shouldn't see the auth screens.
+  if (user && (path === "/login" || path === "/register")) {
     const url = req.nextUrl.clone();
     url.pathname = "/";
+    url.search = "";
     return NextResponse.redirect(url);
   }
   return res;
