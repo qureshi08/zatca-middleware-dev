@@ -35,38 +35,21 @@ export class AuthService {
    * Validates an API Key and returns the associated organization
    */
     static async validateAPIKey(rawKey: string): Promise<any | null> {
+        if (!rawKey || typeof rawKey !== 'string') return null;
         const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
 
-        // 1. Check for standard random keys in the database
-        let { data, error } = await supabaseAdmin
+        // Keys are accepted ONLY if their SHA-256 hash matches an active row in
+        // api_keys. (A previous build had a "stable key derived from the org id"
+        // fallback — removed: org ids aren't secret, so that allowed anyone to
+        // forge a working, non-revocable key for any tenant.)
+        const { data, error } = await supabaseAdmin
             .from('api_keys')
             .select('organization_id, organizations(*)')
             .eq('key_hash', keyHash)
             .eq('status', 'active')
             .maybeSingle();
 
-        // 2. SUPPORT FOR STABLE INSTITUTIONAL KEYS (v23.2)
-        // If not found, check if this is a stable key derived from an orgId
-        if (!data && rawKey.startsWith('sk_zatca_live_')) {
-            // Find the org where sk_zatca_live_ (orgId minus dashes) matches
-            const { data: allOrgs } = await supabaseAdmin
-                .from('organizations')
-                .select('*');
-
-            const matchingOrg = allOrgs?.find(o => {
-                const stableKeySnippet = o.id.replace(/-/g, '').slice(0, 32);
-                return rawKey === `sk_zatca_live_${stableKeySnippet}`;
-            });
-
-            if (matchingOrg) {
-                return matchingOrg;
-            }
-        }
-
-        if (error || !data) {
-            return null;
-        }
-
+        if (error || !data) return null;
         return data.organizations;
     }
 

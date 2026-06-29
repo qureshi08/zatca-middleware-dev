@@ -1,6 +1,13 @@
 'use server';
 
 import { supabaseAdmin } from '../supabase';
+import { encryptSecret, decryptSecret } from '../secrets';
+
+/** Decrypt a stored secret, tolerating legacy plaintext rows (returns as-is if not ciphertext). */
+function safeDecrypt(v?: string | null): string | undefined {
+    if (!v) return v ?? undefined;
+    try { return decryptSecret(v) ?? v; } catch { return v; }
+}
 
 export interface OnboardingStatus {
     isRegistered: boolean;
@@ -38,11 +45,11 @@ export async function getOnboardingStatus(orgId?: string): Promise<OnboardingSta
             // Always read step directly from the persisted column — never reconstruct it
             step: data.onboarding_step || (data.production_csid ? 'production_received' : 'none'),
             complianceRequestId: data.compliance_request_id,
-            complianceCSID: data.compliance_csid,
-            complianceSecret: data.compliance_secret,
-            productionCSID: data.production_csid,
-            productionSecret: data.production_secret,
-            privateKey: data.private_key_base64,
+            complianceCSID: safeDecrypt(data.compliance_csid),
+            complianceSecret: safeDecrypt(data.compliance_secret),
+            productionCSID: safeDecrypt(data.production_csid),
+            productionSecret: safeDecrypt(data.production_secret),
+            privateKey: safeDecrypt(data.private_key_base64),
             publicKey: data.public_key_base64,
         };
     } catch {
@@ -60,14 +67,16 @@ export async function saveOnboardingStatus(orgId: string, status: Partial<Onboar
         updated_at: new Date().toISOString(),
     };
 
+    // Secrets (private key, CSIDs, ZATCA secrets) are encrypted at rest; the
+    // public key, request id, and step are not sensitive.
     if (status.step !== undefined) updateData.onboarding_step = status.step;
-    if (status.privateKey !== undefined) updateData.private_key_base64 = status.privateKey;
+    if (status.privateKey !== undefined) updateData.private_key_base64 = encryptSecret(status.privateKey);
     if (status.publicKey !== undefined) updateData.public_key_base64 = status.publicKey;
-    if (status.complianceCSID !== undefined) updateData.compliance_csid = status.complianceCSID;
+    if (status.complianceCSID !== undefined) updateData.compliance_csid = encryptSecret(status.complianceCSID);
     if (status.complianceRequestId !== undefined) updateData.compliance_request_id = status.complianceRequestId;
-    if (status.complianceSecret !== undefined) updateData.compliance_secret = status.complianceSecret;
-    if (status.productionCSID !== undefined) updateData.production_csid = status.productionCSID;
-    if (status.productionSecret !== undefined) updateData.production_secret = status.productionSecret;
+    if (status.complianceSecret !== undefined) updateData.compliance_secret = encryptSecret(status.complianceSecret);
+    if (status.productionCSID !== undefined) updateData.production_csid = encryptSecret(status.productionCSID);
+    if (status.productionSecret !== undefined) updateData.production_secret = encryptSecret(status.productionSecret);
 
     const { data: existing } = await supabaseAdmin
         .from('zatca_profiles')
