@@ -16,6 +16,7 @@ const btn: React.CSSProperties = { background: "#00994D", color: "#fff", border:
 const ghost: React.CSSProperties = { ...btn, background: "#fff", color: "#00994D", border: "1px solid #00994D" };
 const gray: React.CSSProperties = { ...btn, background: "#eef2f6", color: "#445" };
 const copybox: React.CSSProperties = { background: "#0d1f15", color: "#cfe3f5", padding: "9px 12px", borderRadius: 7, fontFamily: "Consolas,monospace", fontSize: 12, wordBreak: "break-all", margin: "6px 0" };
+const codeBox: React.CSSProperties = { background: "#0d1f15", color: "#a8e6c0", padding: "12px 14px", borderRadius: 8, fontFamily: "var(--font-mono),Consolas,monospace", fontSize: 11.5, whiteSpace: "pre", overflowX: "auto", margin: "6px 0", lineHeight: 1.5 };
 const row: React.CSSProperties = { display: "flex", gap: 14 };
 const ol: React.CSSProperties = { paddingLeft: 18, fontSize: 13, color: "#33414f", margin: 0 };
 const banner = (bg: string, br: string, fg: string): React.CSSProperties => ({ background: bg, border: `1px solid ${br}`, color: fg, padding: "10px 14px", borderRadius: 8, fontSize: 13, marginBottom: 12 });
@@ -146,14 +147,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
 
               {integration === "zoho" && <ZohoGuide base={base} apiKey={sp.newkey} connected={connected} />}
               {integration === "odoo" && <OdooGuide base={base} apiKey={sp.newkey} connected={connected} />}
-              {integration === "custom" && (
-                <div style={card}>
-                  <h4 style={{ margin: "0 0 8px" }}>Call our API</h4>
-                  <div style={copybox}>POST {base}/api/v1/zatca/invoices/submit</div>
-                  <p style={hint}>Send your integration key as the <code>x-api-key</code> header. Generating a key marks this connected.</p>
-                  <div style={{ marginTop: 8 }}><KeyInline newkey={sp.newkey} /></div>
-                </div>
-              )}
+              {integration === "custom" && <CustomApiGuide base={base} apiKey={sp.newkey} />}
 
               {connected && <p style={{ fontSize: 13 }}><Link href="/onboarding?step=4" style={btn}>Next: ZATCA onboarding →</Link></p>}
             </>
@@ -260,6 +254,77 @@ function KeyInline({ newkey }: { newkey?: string }) {
     </>
   ) : (
     <form action={generateWebhookKey}><button type="submit" style={btn}>Generate integration key</button></form>
+  );
+}
+
+function CustomApiGuide({ base, apiKey }: { base: string; apiKey?: string }) {
+  const key = apiKey || "YOUR_KEY";
+  const endpoint = `${base}/api/v1/zatca/invoices/submit`;
+  const curl = `curl -X POST ${endpoint} \\
+  -H "x-api-key: ${key}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "type": "standard",
+    "documentType": "388",
+    "invoiceId": "INV-1001",
+    "buyer": {
+      "partyIdentification": { "id": "310175397400003", "schemeID": "TXID" },
+      "postalAddress": { "streetName": "King Fahd Road", "buildingNumber": "1000",
+        "citySubdivisionName": "Al Olaya", "cityName": "Riyadh",
+        "postalZone": "11564", "country": "SA" },
+      "partyTaxScheme": { "companyID": "310175397400003" },
+      "partyLegalEntity": { "registrationName": "Al-Faisal Trading Co." }
+    },
+    "items": [
+      { "name": "Consulting services", "quantity": 1, "unitPrice": 1000,
+        "vatCategory": "S", "vatRate": 15 }
+    ]
+  }'`;
+  const responseExample = `{
+  "success": true,
+  "invoiceId": "INV-1001",
+  "uuid": "8f2c…",
+  "zatcaStatus": "CLEARED",        // or "REPORTED" for simplified
+  "qrCode": "data:image/png;base64,…",
+  "invoiceHash": "…",
+  "signedXml": "<base64 UBL XML>",
+  "timestamp": "2026-…Z"
+}`;
+
+  return (
+    <>
+      <div style={card}>
+        <StepHead n={1} title="Generate your API key" />
+        <p style={hint}>Send it as the <code>x-api-key</code> header on every request. Shown once — store it as a secret in your app.</p>
+        <div style={{ marginTop: 8 }}><KeyInline newkey={apiKey} /></div>
+      </div>
+
+      <div style={card}>
+        <StepHead n={2} title="Submit an invoice" tag="the one endpoint you need" />
+        <p style={hint}>One call builds the UBL XML, signs it, submits to ZATCA, and returns the status + QR + signed XML. Works for all document types.</p>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", margin: "6px 0" }}>
+          <span style={{ background: "#E6F5ED", color: "#007A3D", fontWeight: 700, fontSize: 11, padding: "3px 8px", borderRadius: 6 }}>POST</span>
+          <code style={{ fontSize: 12.5 }}>{base}/api/v1/zatca/invoices/submit</code>
+        </div>
+        <p style={{ ...hint, marginTop: 10 }}><b>Body fields:</b> <code>type</code> (<code>standard</code> B2B / <code>simplified</code> B2C), <code>documentType</code> (<code>388</code> invoice / <code>381</code> credit / <code>383</code> debit), <code>invoiceId</code>, <code>items[]</code> (<code>name, quantity, unitPrice, vatCategory, vatRate</code>). <code>buyer</code> is required for <b>standard</b>; <code>originalInvoiceId</code>+<code>creditReason</code> for credit/debit notes.</p>
+        <p style={{ ...hint, marginTop: 10, marginBottom: 2 }}><b>Example (cURL):</b></p>
+        <pre style={codeBox}>{curl}</pre>
+        <p style={{ ...hint, marginTop: 10, marginBottom: 2 }}><b>Response:</b></p>
+        <pre style={codeBox}>{responseExample}</pre>
+      </div>
+
+      <div style={card}>
+        <StepHead n={3} title="Test it in Postman" />
+        <p style={hint}>Import our ready-made collection (base URL pre-filled), set the <code>apiKey</code> variable to your key from step 1, and hit <b>Send</b>.</p>
+        <a href={`${base}/api/postman`} style={{ ...btn, marginTop: 6 }} download>⬇ Download Postman collection</a>
+        <p style={{ ...hint, marginTop: 12 }}>Other endpoints: <code>GET /api/v1/zatca/invoices</code> (list), <code>GET /api/v1/zatca/summary</code> (KPIs). Auth on all is the same <code>x-api-key</code> header.</p>
+      </div>
+
+      <div style={card}>
+        <StepHead n={4} title="Where it lands" />
+        <p style={{ ...hint, margin: 0 }}>Every submission is signed, filed against your active ZATCA environment (Demo simulation until you <Link href="/onboarding?step=4">go live</Link>), and appears on your <Link href="/invoices">Invoices</Link> and <Link href="/activity">Activity</Link> pages — successes and failures, with reasons.</p>
+      </div>
+    </>
   );
 }
 
