@@ -10,7 +10,7 @@ export default async function ProfilePage() {
 
   return (
     <div style={{ padding: "28px 32px", maxWidth: 760 }}>
-      <h1 style={{ color: "#155a93", fontSize: 22, margin: 0 }}>Business Profile</h1>
+      <h1 style={{ color: "#007A3D", fontSize: 22, margin: 0 }}>Business Profile</h1>
       <p style={{ color: "#6b7785", fontSize: 13, marginTop: 4 }}>
         Your seller identity — used on every ZATCA invoice. Must match your ZATCA registration.
       </p>
@@ -47,7 +47,7 @@ export default async function ProfilePage() {
           <input style={input} name="addr_postal" placeholder="Postal code (NNNNN)" defaultValue={org?.addr_postal ?? ""} pattern="\d{5}" title="5 digits" required />
           <input style={input} name="addr_country" placeholder="Country" defaultValue={org?.addr_country ?? "SA"} />
         </div>
-        <button type="submit" style={{ marginTop: 18, background: "#1F6FB2", color: "#fff", border: "none", padding: "9px 16px", borderRadius: 7, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+        <button type="submit" style={{ marginTop: 18, background: "#00994D", color: "#fff", border: "none", padding: "9px 16px", borderRadius: 7, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
           Save &amp; continue →
         </button>
       </form>

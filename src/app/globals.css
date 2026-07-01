@@ -8,12 +8,31 @@
 */
 
 :root {
+  /* ── CBT Brand tokens (Convergent Business Technologies) ── */
+  --color-primary:       #00994D;  /* CBT Green */
+  --color-primary-light: #00C060;
+  --color-primary-dark:  #007A3D;
+  --color-primary-muted: #E6F5ED;
+  --color-surface:       #F7F8F7;
+  --color-border-brand:  #E2E8E4;
+  --color-text-muted:    #6B7280;
+  --color-text-body:     #374151;
+  --color-text-heading:  #111827;
+  --color-success:       #00994D;
+  --color-warning:       #F59E0B;
+  --color-error:         #EF4444;
+  --color-info:          #3B82F6;
+
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body:    'DM Sans', 'Helvetica Neue', sans-serif;
+  --font-mono:    'JetBrains Mono', 'Courier New', monospace;
+
   /* ── Colors ── */
   --bg: #ffffff;
-  --text-primary: #1d1d1f;
-  --text-secondary: #6e6e73;
-  --border: #e5e5e7;
-  --accent: #ea580c;
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --border: #E2E8E4;
+  --accent: #00994D;
   --bg-sidebar: #fbfbfd;
 
   /* ── Spacing (4px/8px Grid) ── */
@@ -32,7 +51,7 @@
   --shadow-subtle: 0 1px 4px rgba(0, 0, 0, 0.03);
 
   /* ── Typography (13px Pro Base) ── */
-  --font-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-base: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --fs-base: 13px;
 }
 
@@ -259,7 +278,12 @@ td {
 
 .input-pro:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.08);
+  box-shadow: 0 0 0 3px rgba(0, 153, 77, 0.15);
+}
+
+/* ── CBT headings: Playfair Display for titles ── */
+h1, .h1, h2, .h2, h3, .h3 {
+  font-family: var(--font-heading);
 }
 
 /* ── Utilities ── */

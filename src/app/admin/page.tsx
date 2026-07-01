@@ -5,9 +5,9 @@ import { updateSupportRequestStatus } from "@/lib/actions";
 
 const card: React.CSSProperties = { background: "#fff", border: "1px solid #e3e8ef", borderRadius: 10, marginBottom: 16 };
 const input: React.CSSProperties = { padding: "7px 9px", border: "1px solid #cfd8e3", borderRadius: 7, fontSize: 12.5 };
-const btn: React.CSSProperties = { background: "#1F6FB2", color: "#fff", border: "none", padding: "7px 12px", borderRadius: 7, fontSize: 12.5, fontWeight: 600, cursor: "pointer" };
+const btn: React.CSSProperties = { background: "#00994D", color: "#fff", border: "none", padding: "7px 12px", borderRadius: 7, fontSize: 12.5, fontWeight: 600, cursor: "pointer" };
 const pill = (s: string): React.CSSProperties => {
-  const m: Record<string, [string, string]> = { open: ["#fff3df", "#b9770e"], in_progress: ["#e7f0fb", "#1F6FB2"], resolved: ["#e6f6ec", "#1f9d57"] };
+  const m: Record<string, [string, string]> = { open: ["#fff3df", "#b9770e"], in_progress: ["#E6F5ED", "#00994D"], resolved: ["#e6f6ec", "#1f9d57"] };
   const [bg, fg] = m[s] || ["#eef2f6", "#67788a"];
   return { background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, textTransform: "capitalize" };
 };
@@ -54,14 +54,14 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   return (
     <div style={{ padding: "28px 32px", maxWidth: 1040 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <h1 style={{ color: "#155a93", fontSize: 22, margin: 0, flex: 1 }}>Admin · Support</h1>
-        <span style={{ background: "#1F6FB2", color: "#fff", fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 5, letterSpacing: 0.5 }}>SUPPORT STAFF</span>
+        <h1 style={{ color: "#007A3D", fontSize: 22, margin: 0, flex: 1 }}>Admin · Support</h1>
+        <span style={{ background: "#00994D", color: "#fff", fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 5, letterSpacing: 0.5 }}>SUPPORT STAFF</span>
       </div>
       <p style={{ color: "#6b7785", fontSize: 13, marginTop: 4 }}>All tenants and incoming support requests across the platform.</p>
       {sp.msg && <div style={{ background: "#e9f8ef", border: "1px solid #b6e4c6", color: "#1f9d57", padding: "9px 13px", borderRadius: 8, fontSize: 13, margin: "12px 0" }}>✅ {sp.msg}</div>}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, margin: "16px 0" }}>
-        <div style={{ ...card, padding: "14px 16px", marginBottom: 0 }}><div style={{ fontSize: 24, fontWeight: 700, color: "#155a93" }}>{tenants.length}</div><div style={{ color: "#6b7785", fontSize: 12 }}>Tenants</div></div>
+        <div style={{ ...card, padding: "14px 16px", marginBottom: 0 }}><div style={{ fontSize: 24, fontWeight: 700, color: "#007A3D" }}>{tenants.length}</div><div style={{ color: "#6b7785", fontSize: 12 }}>Tenants</div></div>
         <div style={{ ...card, padding: "14px 16px", marginBottom: 0 }}><div style={{ fontSize: 24, fontWeight: 700, color: "#1f9d57" }}>{tenants.filter((t) => t.status === "active").length}</div><div style={{ color: "#6b7785", fontSize: 12 }}>Active</div></div>
         <div style={{ ...card, padding: "14px 16px", marginBottom: 0 }}><div style={{ fontSize: 24, fontWeight: 700, color: openCount ? "#b9770e" : "#1f9d57" }}>{openCount}</div><div style={{ color: "#6b7785", fontSize: 12 }}>Open requests</div></div>
       </div>

@@ -66,7 +66,7 @@ function LoginInner() {
         <input style={authInput} type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "14px 0 5px" }}>
           <label style={{ ...authLabel, margin: 0 }}>Password</label>
-          <button type="button" onClick={forgotPassword} style={{ background: "none", border: "none", color: "#1F6FB2", fontSize: 12, cursor: "pointer", padding: 0 }}>Forgot password?</button>
+          <button type="button" onClick={forgotPassword} style={{ background: "none", border: "none", color: "#00994D", fontSize: 12, cursor: "pointer", padding: 0 }}>Forgot password?</button>
         </div>
         <input style={authInput} type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
         <button type="submit" disabled={loading} style={{ ...authBtn, marginTop: 18, opacity: loading ? 0.6 : 1 }}>{loading ? "Signing in…" : "Sign in"}</button>
@@ -83,7 +83,7 @@ function LoginInner() {
       </button>
 
       <p style={{ textAlign: "center", color: "#6b7785", fontSize: 13, marginTop: 18, marginBottom: 0 }}>
-        Don&apos;t have an account? <Link href="/register" style={{ color: "#1F6FB2", fontWeight: 600 }}>Sign up</Link>
+        Don&apos;t have an account? <Link href="/register" style={{ color: "#00994D", fontWeight: 600 }}>Sign up</Link>
       </p>
     </AuthShell>
   );

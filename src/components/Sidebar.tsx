@@ -20,9 +20,9 @@ export default function Sidebar({ email, isAdmin }: { email?: string; isAdmin?: 
   const nav = isAdmin ? [{ href: "/admin", label: "Admin · Support" }] : NAV;
 
   return (
-    <aside style={{ width: 240, flexShrink: 0, background: "#0f2233", color: "#cdd8e3", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <div style={{ padding: "18px 20px", borderBottom: "1px solid #1d3a52", display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 30, height: 30, borderRadius: 8, background: "#1F6FB2", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>Z</div>
+    <aside style={{ width: 240, flexShrink: 0, background: "#0d1f15", color: "#cdd8e3", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <div style={{ padding: "18px 20px", borderBottom: "1px solid #1c3a2a", display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ width: 30, height: 30, borderRadius: 8, background: "#00994D", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>Z</div>
         <div style={{ fontWeight: 700, color: "#fff", fontSize: 14, lineHeight: 1.1 }}>
           ZATCA<br /><span style={{ fontWeight: 400, color: "#7d93a8", fontSize: 11 }}>Middleware</span>
         </div>
@@ -41,8 +41,8 @@ export default function Sidebar({ email, isAdmin }: { email?: string; isAdmin?: 
                 fontSize: 13,
                 textDecoration: "none",
                 color: active ? "#fff" : "#cdd8e3",
-                background: active ? "#16293b" : "transparent",
-                borderLeft: `3px solid ${active ? "#1F6FB2" : "transparent"}`,
+                background: active ? "#12291b" : "transparent",
+                borderLeft: `3px solid ${active ? "#00994D" : "transparent"}`,
               }}
             >
               {item.label}
@@ -51,10 +51,10 @@ export default function Sidebar({ email, isAdmin }: { email?: string; isAdmin?: 
         })}
       </nav>
 
-      <div style={{ padding: "14px 18px", borderTop: "1px solid #1d3a52" }}>
+      <div style={{ padding: "14px 18px", borderTop: "1px solid #1c3a2a" }}>
         {email && (
           <div style={{ fontSize: 11.5, color: "#7d93a8", marginBottom: 9, wordBreak: "break-all", lineHeight: 1.4 }}>
-            {isAdmin && <span style={{ display: "inline-block", background: "#1F6FB2", color: "#fff", fontSize: 9, fontWeight: 700, padding: "1px 6px", borderRadius: 4, marginRight: 6, letterSpacing: 0.5, verticalAlign: "middle" }}>SUPPORT</span>}
+            {isAdmin && <span style={{ display: "inline-block", background: "#00994D", color: "#fff", fontSize: 9, fontWeight: 700, padding: "1px 6px", borderRadius: 4, marginRight: 6, letterSpacing: 0.5, verticalAlign: "middle" }}>SUPPORT</span>}
             {email}
           </div>
         )}

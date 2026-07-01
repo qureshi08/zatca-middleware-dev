@@ -12,10 +12,10 @@ const card: React.CSSProperties = { background: "#fff", border: "1px solid #e3e8
 const label: React.CSSProperties = { display: "block", fontSize: 12, color: "#33414f", margin: "12px 0 3px", fontWeight: 600 };
 const hint: React.CSSProperties = { fontSize: 11.5, color: "#8a97a6", margin: "0 0 4px" };
 const input: React.CSSProperties = { width: "100%", padding: "8px 10px", border: "1px solid #cfd8e3", borderRadius: 7, fontSize: 13 };
-const btn: React.CSSProperties = { background: "#1F6FB2", color: "#fff", border: "none", padding: "9px 16px", borderRadius: 7, fontSize: 13, fontWeight: 500, cursor: "pointer", textDecoration: "none", display: "inline-block" };
-const ghost: React.CSSProperties = { ...btn, background: "#fff", color: "#1F6FB2", border: "1px solid #1F6FB2" };
+const btn: React.CSSProperties = { background: "#00994D", color: "#fff", border: "none", padding: "9px 16px", borderRadius: 7, fontSize: 13, fontWeight: 500, cursor: "pointer", textDecoration: "none", display: "inline-block" };
+const ghost: React.CSSProperties = { ...btn, background: "#fff", color: "#00994D", border: "1px solid #00994D" };
 const gray: React.CSSProperties = { ...btn, background: "#eef2f6", color: "#445" };
-const copybox: React.CSSProperties = { background: "#0f2233", color: "#cfe3f5", padding: "9px 12px", borderRadius: 7, fontFamily: "Consolas,monospace", fontSize: 12, wordBreak: "break-all", margin: "6px 0" };
+const copybox: React.CSSProperties = { background: "#0d1f15", color: "#cfe3f5", padding: "9px 12px", borderRadius: 7, fontFamily: "Consolas,monospace", fontSize: 12, wordBreak: "break-all", margin: "6px 0" };
 const row: React.CSSProperties = { display: "flex", gap: 14 };
 const ol: React.CSSProperties = { paddingLeft: 18, fontSize: 13, color: "#33414f", margin: 0 };
 const banner = (bg: string, br: string, fg: string): React.CSSProperties => ({ background: bg, border: `1px solid ${br}`, color: fg, padding: "10px 14px", borderRadius: 8, fontSize: 13, marginBottom: 12 });
@@ -55,7 +55,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
 
   return (
     <div style={{ padding: "28px 32px", maxWidth: 880 }}>
-      <h1 style={{ color: "#155a93", fontSize: 22, margin: 0 }}>Onboarding</h1>
+      <h1 style={{ color: "#007A3D", fontSize: 22, margin: 0 }}>Onboarding</h1>
       <p style={{ color: "#6b7785", fontSize: 13, marginTop: 4 }}>
         One-time setup. You&apos;re in <strong>Demo mode</strong> (ZATCA simulation, OTP 123456) — nothing is legally filed.
         {zatcaOnboarded && <> &nbsp;·&nbsp; <Link href="/onboarding?step=3">Manage connection</Link></>}
@@ -67,9 +67,9 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
           const n = i + 1, isDone = done[i], on = selected === n;
           return (
             <Link key={s} href={`/onboarding?step=${n}`} style={{ flex: 1, textDecoration: "none", padding: "10px 8px", borderRadius: 8, textAlign: "center", fontSize: 12.5,
-              border: `1px solid ${on ? "#1F6FB2" : isDone ? "#b6e4c6" : "#e3e8ef"}`,
-              background: on ? "#eef5fc" : isDone ? "#f1faf4" : "#fff",
-              color: on ? "#155a93" : isDone ? "#1f9d57" : "#6b7785", fontWeight: on ? 700 : 500, boxShadow: on ? "0 1px 4px rgba(31,111,178,.15)" : "none" }}>
+              border: `1px solid ${on ? "#00994D" : isDone ? "#b6e4c6" : "#e3e8ef"}`,
+              background: on ? "#E6F5ED" : isDone ? "#f1faf4" : "#fff",
+              color: on ? "#007A3D" : isDone ? "#1f9d57" : "#6b7785", fontWeight: on ? 700 : 500, boxShadow: on ? "0 1px 4px rgba(0,153,77,.15)" : "none" }}>
               {isDone ? "✓ " : `${n}. `}{s}
             </Link>
           );
@@ -236,7 +236,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
 function StepHead({ n, title, tag }: { n: number; title: string; tag?: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-      <span style={{ width: 24, height: 24, borderRadius: 999, background: "#1F6FB2", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{n}</span>
+      <span style={{ width: 24, height: 24, borderRadius: 999, background: "#00994D", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{n}</span>
       <h4 style={{ margin: 0, fontSize: 15 }}>{title}{tag && <span style={{ fontWeight: 400, color: "#8a97a6", fontSize: 12 }}> · {tag}</span>}</h4>
     </div>
   );
@@ -267,7 +267,7 @@ function ZohoGuide({ base, apiKey, connected }: { base: string; apiKey?: string;
   const key = apiKey || "PASTE_KEY_FROM_STEP_2";
   const invoiceUrl = `${base}/api/zoho/webhook?apiKey=${key}&entityType=invoice`;
   const creditNoteUrl = `${base}/api/zoho/webhook?apiKey=${key}&entityType=creditnote`;
-  const num: React.CSSProperties = { fontWeight: 700, color: "#155a93" };
+  const num: React.CSSProperties = { fontWeight: 700, color: "#007A3D" };
 
   return (
     <>
@@ -408,7 +408,7 @@ function OdooGuide({ base, apiKey, connected }: { base: string; apiKey?: string;
           <span style={{ marginLeft: "auto" }}><ConnPill connected={connected} /></span>
         </div>
         <details style={{ fontSize: 12.5, marginBottom: 10 }}>
-          <summary style={{ cursor: "pointer", color: "#1F6FB2", fontWeight: 600 }}>🔍 Where do I find each value?</summary>
+          <summary style={{ cursor: "pointer", color: "#00994D", fontWeight: 600 }}>🔍 Where do I find each value?</summary>
           <div style={{ padding: "10px 12px", marginTop: 6, background: "#f7f9fc", border: "1px solid #e3e8ef", borderRadius: 8, color: "#33414f", lineHeight: 1.7 }}>
             <p style={{ margin: "0 0 6px" }}><b>URL</b> — your browser&apos;s address bar when Odoo is open, e.g. <code>https://yourco.odoo.com</code>.</p>
             <p style={{ margin: "0 0 6px" }}><b>Database</b> — usually the word before <code>.odoo.com</code> (for Odoo Online we auto-correct casing). Unsure? Settings → bottom → &quot;Activate developer mode&quot;, then Settings → Technical / ⚙️ About.</p>
@@ -427,8 +427,8 @@ function OdooGuide({ base, apiKey, connected }: { base: string; apiKey?: string;
         <StepHead n={2} title="Set up automation in Odoo" />
 
         {/* Primary path: we do it for you over RPC */}
-        <div style={{ background: "#eef5fc", border: "1px solid #bcd9f2", borderRadius: 8, padding: "14px 16px", marginBottom: 14 }}>
-          <p style={{ margin: "0 0 8px", fontWeight: 700, color: "#155a93" }}>⚡ Let us set it up for you (recommended)</p>
+        <div style={{ background: "#E6F5ED", border: "1px solid #b7e0c8", borderRadius: 8, padding: "14px 16px", marginBottom: 14 }}>
+          <p style={{ margin: "0 0 8px", fontWeight: 700, color: "#007A3D" }}>⚡ Let us set it up for you (recommended)</p>
           <p style={{ ...hint, margin: "0 0 10px" }}>
             We&apos;ll connect to your Odoo and create everything automatically — install the <b>Automation Rules</b> app
             if needed, add the webhook <b>Server Action</b>, and the <b>Automated Action</b> that fires it on every posted
@@ -453,7 +453,7 @@ function OdooGuide({ base, apiKey, connected }: { base: string; apiKey?: string;
           <KeyInline newkey={apiKey} />
         </div>
 
-        <p style={{ fontWeight: 700, margin: "14px 0 4px", color: "#155a93" }}>A. Create the Server Action</p>
+        <p style={{ fontWeight: 700, margin: "14px 0 4px", color: "#007A3D" }}>A. Create the Server Action</p>
         <ol style={ol}>
           <li style={{ margin: "7px 0" }}>If you don&apos;t see <b>Technical</b>: Settings → scroll to the bottom → <b>Activate the developer mode</b>.</li>
           <li style={{ margin: "7px 0" }}>Go to <b>Settings → Technical → Actions → Server Actions</b> → <b>New</b>.</li>
@@ -467,7 +467,7 @@ function OdooGuide({ base, apiKey, connected }: { base: string; apiKey?: string;
           <li style={{ margin: "7px 0" }}><b>Save</b> (the cloud / save icon).</li>
         </ol>
 
-        <p style={{ fontWeight: 700, margin: "16px 0 4px", color: "#155a93" }}>B. Create the Automated Action (the trigger)</p>
+        <p style={{ fontWeight: 700, margin: "16px 0 4px", color: "#007A3D" }}>B. Create the Automated Action (the trigger)</p>
         <ol style={ol}>
           <li style={{ margin: "7px 0" }}>Go to <b>Settings → Technical → Automation → Automated Actions</b> → <b>New</b>.</li>
           <li style={{ margin: "7px 0" }}><b>Name</b>: <code>ZATCA on Posted Invoice</code>.</li>

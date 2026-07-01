@@ -11,7 +11,7 @@ export default function SignOutButton({ dark = false }: { dark?: boolean }) {
     router.refresh();
   };
   const style: React.CSSProperties = dark
-    ? { width: "100%", padding: "9px 14px", borderRadius: 7, border: "1px solid #2c4a63", background: "#16293b", color: "#cdd8e3", cursor: "pointer", fontSize: 13, fontWeight: 500 }
+    ? { width: "100%", padding: "9px 14px", borderRadius: 7, border: "1px solid #2c4a63", background: "#12291b", color: "#cdd8e3", cursor: "pointer", fontSize: 13, fontWeight: 500 }
     : { padding: "7px 14px", borderRadius: 7, border: "1px solid #cfd8e3", background: "#fff", cursor: "pointer", fontSize: 13 };
   return (
     <button onClick={signOut} style={style}>

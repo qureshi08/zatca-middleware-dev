@@ -17,7 +17,7 @@ function Pill({ s }: { s: string | null }) {
   const v = (s || "").toUpperCase();
   const map: Record<string, [string, string]> = {
     CLEARED: ["#e6f6ec", "#1f9d57"],
-    REPORTED: ["#e7f0fb", "#1F6FB2"],
+    REPORTED: ["#E6F5ED", "#00994D"],
     REJECTED: ["#fdeeea", "#c0392b"],
     FAILED: ["#fdeeea", "#c0392b"],
   };
@@ -39,15 +39,15 @@ export default async function InvoicesPage() {
 
   const count = (f: (i: Inv) => boolean) => rows.filter(f).length;
   const kpis = [
-    { l: "Total", n: rows.length, c: "#155a93" },
+    { l: "Total", n: rows.length, c: "#007A3D" },
     { l: "Cleared", n: count((i) => i.zatca_status === "CLEARED"), c: "#1f9d57" },
-    { l: "Reported", n: count((i) => i.zatca_status === "REPORTED"), c: "#1F6FB2" },
+    { l: "Reported", n: count((i) => i.zatca_status === "REPORTED"), c: "#00994D" },
     { l: "Failed", n: count((i) => ["REJECTED", "FAILED"].includes((i.zatca_status || "").toUpperCase())), c: "#c0392b" },
   ];
 
   return (
     <div style={{ padding: "28px 32px", maxWidth: 1000 }}>
-      <h1 style={{ color: "#155a93", fontSize: 22, margin: 0 }}>Invoices</h1>
+      <h1 style={{ color: "#007A3D", fontSize: 22, margin: 0 }}>Invoices</h1>
       <p style={{ color: "#6b7785", fontSize: 13, marginTop: 4 }}>Every invoice processed for {org?.name ?? "your business"} — Demo (ZATCA simulation).</p>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, margin: "16px 0" }}>
@@ -88,7 +88,7 @@ export default async function InvoicesPage() {
                   <td style={{ padding: "10px 14px", borderBottom: "1px solid #f0f3f7" }}>SAR {Number(i.total_amount ?? 0).toLocaleString()}</td>
                   <td style={{ padding: "10px 14px", borderBottom: "1px solid #f0f3f7" }}><Pill s={i.zatca_status} /></td>
                   <td style={{ padding: "10px 14px", borderBottom: "1px solid #f0f3f7", color: "#6b7785" }}>{new Date(i.created_at).toLocaleDateString()}</td>
-                  <td style={{ padding: "10px 14px", borderBottom: "1px solid #f0f3f7" }}><Link href={`/invoices/${i.id}`} style={{ color: "#1F6FB2" }}>View</Link></td>
+                  <td style={{ padding: "10px 14px", borderBottom: "1px solid #f0f3f7" }}><Link href={`/invoices/${i.id}`} style={{ color: "#00994D" }}>View</Link></td>
                 </tr>
               ))}
             </tbody>

@@ -5,10 +5,10 @@ import { submitSupportRequest } from "@/lib/actions";
 const card: React.CSSProperties = { background: "#fff", border: "1px solid #e3e8ef", borderRadius: 10, padding: "18px 20px", marginBottom: 14 };
 const label: React.CSSProperties = { display: "block", fontSize: 12, color: "#33414f", margin: "12px 0 4px", fontWeight: 600 };
 const input: React.CSSProperties = { width: "100%", padding: "9px 11px", border: "1px solid #cfd8e3", borderRadius: 8, fontSize: 13, boxSizing: "border-box" };
-const btn: React.CSSProperties = { background: "#1F6FB2", color: "#fff", border: "none", padding: "10px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" };
+const btn: React.CSSProperties = { background: "#00994D", color: "#fff", border: "none", padding: "10px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" };
 const banner = (bg: string, br: string, fg: string): React.CSSProperties => ({ background: bg, border: `1px solid ${br}`, color: fg, padding: "10px 14px", borderRadius: 8, fontSize: 13, marginBottom: 14 });
 const pill = (s: string): React.CSSProperties => {
-  const m: Record<string, [string, string]> = { open: ["#fff3df", "#b9770e"], in_progress: ["#e7f0fb", "#1F6FB2"], resolved: ["#e6f6ec", "#1f9d57"] };
+  const m: Record<string, [string, string]> = { open: ["#fff3df", "#b9770e"], in_progress: ["#E6F5ED", "#00994D"], resolved: ["#e6f6ec", "#1f9d57"] };
   const [bg, fg] = m[s] || ["#eef2f6", "#67788a"];
   return { background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, textTransform: "capitalize" };
 };
@@ -33,7 +33,7 @@ export default async function SupportPage({ searchParams }: { searchParams: Prom
 
   return (
     <div style={{ padding: "28px 32px", maxWidth: 820 }}>
-      <h1 style={{ color: "#155a93", fontSize: 22, margin: 0 }}>Support</h1>
+      <h1 style={{ color: "#007A3D", fontSize: 22, margin: 0 }}>Support</h1>
       <p style={{ color: "#6b7785", fontSize: 13, marginTop: 4 }}>
         Need help, or want us to support a different accounting software? Send our team a message — we&apos;ll get back to you.
       </p>
@@ -78,7 +78,7 @@ export default async function SupportPage({ searchParams }: { searchParams: Prom
                 </div>
                 <div style={{ color: "#5a6b7b", fontSize: 12.5, marginTop: 4 }}>{r.category.replace("_", " ")}{r.requested_software ? ` · ${r.requested_software}` : ""}</div>
                 <div style={{ color: "#33414f", fontSize: 13, marginTop: 6, whiteSpace: "pre-wrap" }}>{r.message}</div>
-                {r.admin_note && <div style={{ marginTop: 8, background: "#eef5fc", border: "1px solid #bcd9f2", color: "#155a93", fontSize: 12.5, padding: "8px 10px", borderRadius: 7 }}><b>Support:</b> {r.admin_note}</div>}
+                {r.admin_note && <div style={{ marginTop: 8, background: "#E6F5ED", border: "1px solid #b7e0c8", color: "#007A3D", fontSize: 12.5, padding: "8px 10px", borderRadius: 7 }}><b>Support:</b> {r.admin_note}</div>}
               </div>
             ))}
           </div>

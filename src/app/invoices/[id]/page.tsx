@@ -25,10 +25,10 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div style={{ padding: "28px 32px", maxWidth: 900 }}>
-      <p style={{ marginBottom: 8 }}><Link href="/invoices" style={{ color: "#1F6FB2", fontSize: 13 }}>← Invoices</Link></p>
-      <h1 style={{ color: "#155a93", fontSize: 22, margin: 0 }}>
+      <p style={{ marginBottom: 8 }}><Link href="/invoices" style={{ color: "#00994D", fontSize: 13 }}>← Invoices</Link></p>
+      <h1 style={{ color: "#007A3D", fontSize: 22, margin: 0 }}>
         {inv.invoice_number}{" "}
-        <span style={{ fontSize: 12, padding: "3px 9px", borderRadius: 12, fontWeight: 600, verticalAlign: "middle", background: failed ? "#fdeeea" : status === "CLEARED" ? "#e6f6ec" : "#e7f0fb", color: failed ? "#c0392b" : status === "CLEARED" ? "#1f9d57" : "#1F6FB2" }}>{status || "PENDING"}</span>
+        <span style={{ fontSize: 12, padding: "3px 9px", borderRadius: 12, fontWeight: 600, verticalAlign: "middle", background: failed ? "#fdeeea" : status === "CLEARED" ? "#e6f6ec" : "#E6F5ED", color: failed ? "#c0392b" : status === "CLEARED" ? "#1f9d57" : "#00994D" }}>{status || "PENDING"}</span>
       </h1>
       <p style={{ color: "#6b7785", fontSize: 13, marginTop: 4, textTransform: "capitalize" }}>
         {inv.invoice_type} · doc {inv.document_type} · {new Date(inv.created_at).toLocaleString()}
@@ -78,8 +78,8 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
           )}
           {inv.xml && (
             <details style={{ marginTop: 10 }}>
-              <summary style={{ cursor: "pointer", color: "#1F6FB2", fontSize: 13 }}>View signed XML</summary>
-              <pre style={{ background: "#0f2233", color: "#cfe3f5", padding: 10, borderRadius: 8, fontSize: 10.5, maxHeight: 280, overflow: "auto", marginTop: 6 }}>{inv.xml}</pre>
+              <summary style={{ cursor: "pointer", color: "#00994D", fontSize: 13 }}>View signed XML</summary>
+              <pre style={{ background: "#0d1f15", color: "#cfe3f5", padding: 10, borderRadius: 8, fontSize: 10.5, maxHeight: 280, overflow: "auto", marginTop: 6 }}>{inv.xml}</pre>
             </details>
           )}
         </div>

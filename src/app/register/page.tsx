@@ -62,10 +62,10 @@ function RegisterInner() {
   if (sent) {
     return (
       <AuthShell title="Confirm your email" subtitle={`We sent a confirmation link to ${sent}.`}>
-        <div style={{ background: "#eef5fc", border: "1px solid #bcd9f2", color: "#155a93", fontSize: 13, padding: "12px 14px", borderRadius: 9 }}>
-          Click the link in that email to activate your account, then sign in. Didn&apos;t get it? Check spam, or <Link href="/register" style={{ color: "#1F6FB2", fontWeight: 600 }}>try again</Link>.
+        <div style={{ background: "#E6F5ED", border: "1px solid #b7e0c8", color: "#007A3D", fontSize: 13, padding: "12px 14px", borderRadius: 9 }}>
+          Click the link in that email to activate your account, then sign in. Didn&apos;t get it? Check spam, or <Link href="/register" style={{ color: "#00994D", fontWeight: 600 }}>try again</Link>.
         </div>
-        <p style={{ textAlign: "center", marginTop: 16, marginBottom: 0 }}><Link href="/login" style={{ color: "#1F6FB2", fontWeight: 600, fontSize: 13 }}>← Back to sign in</Link></p>
+        <p style={{ textAlign: "center", marginTop: 16, marginBottom: 0 }}><Link href="/login" style={{ color: "#00994D", fontWeight: 600, fontSize: 13 }}>← Back to sign in</Link></p>
       </AuthShell>
     );
   }
@@ -95,7 +95,7 @@ function RegisterInner() {
       </button>
 
       <p style={{ textAlign: "center", color: "#6b7785", fontSize: 13, marginTop: 18, marginBottom: 0 }}>
-        Already have an account? <Link href="/login" style={{ color: "#1F6FB2", fontWeight: 600 }}>Sign in</Link>
+        Already have an account? <Link href="/login" style={{ color: "#00994D", fontWeight: 600 }}>Sign in</Link>
       </p>
       <p style={{ textAlign: "center", color: "#9aa6b2", fontSize: 11, marginTop: 10, marginBottom: 0 }}>
         You&apos;ll add your business details (VAT, CR) during onboarding.

@@ -52,7 +52,7 @@ export default async function ActivityPage() {
 
   return (
     <div style={{ padding: "28px 32px", maxWidth: 1000 }}>
-      <h1 style={{ color: "#155a93", fontSize: 22, margin: 0 }}>Activity</h1>
+      <h1 style={{ color: "#007A3D", fontSize: 22, margin: 0 }}>Activity</h1>
       <p style={{ color: "#6b7785", fontSize: 13, marginTop: 4 }}>
         Every invoice/credit-note your accounting software sent here, and what happened — including failures, so you can see <em>why</em> something didn&apos;t clear.
       </p>
