@@ -1,17 +1,7 @@
 import { getActiveOrg } from "@/lib/org";
 import { supabaseAdmin } from "@/lib/supabase";
 import { submitSupportRequest } from "@/lib/actions";
-
-const card: React.CSSProperties = { background: "#fff", border: "1px solid #e3e8ef", borderRadius: 10, padding: "18px 20px", marginBottom: 14 };
-const label: React.CSSProperties = { display: "block", fontSize: 12, color: "#33414f", margin: "12px 0 4px", fontWeight: 600 };
-const input: React.CSSProperties = { width: "100%", padding: "9px 11px", border: "1px solid #cfd8e3", borderRadius: 8, fontSize: 13, boxSizing: "border-box" };
-const btn: React.CSSProperties = { background: "#00994D", color: "#fff", border: "none", padding: "10px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" };
-const banner = (bg: string, br: string, fg: string): React.CSSProperties => ({ background: bg, border: `1px solid ${br}`, color: fg, padding: "10px 14px", borderRadius: 8, fontSize: 13, marginBottom: 14 });
-const pill = (s: string): React.CSSProperties => {
-  const m: Record<string, [string, string]> = { open: ["#fff3df", "#b9770e"], in_progress: ["#E6F5ED", "#00994D"], resolved: ["#e6f6ec", "#1f9d57"] };
-  const [bg, fg] = m[s] || ["#eef2f6", "#67788a"];
-  return { background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, textTransform: "capitalize" };
-};
+import { card, label, input, btn, banner, statusPill as pill } from "@/lib/ui";
 
 export default async function SupportPage({ searchParams }: { searchParams: Promise<{ sent?: string; err?: string }> }) {
   const sp = await searchParams;

@@ -2,15 +2,11 @@ import { getCurrentUser } from "@/lib/supabase/server";
 import { isPlatformAdmin } from "@/lib/admin";
 import { supabaseAdmin } from "@/lib/supabase";
 import { updateSupportRequestStatus } from "@/lib/actions";
+import { statusPill as pill } from "@/lib/ui";
 
 const card: React.CSSProperties = { background: "#fff", border: "1px solid #e3e8ef", borderRadius: 10, marginBottom: 16 };
 const input: React.CSSProperties = { padding: "7px 9px", border: "1px solid #cfd8e3", borderRadius: 7, fontSize: 12.5 };
 const btn: React.CSSProperties = { background: "#00994D", color: "#fff", border: "none", padding: "7px 12px", borderRadius: 7, fontSize: 12.5, fontWeight: 600, cursor: "pointer" };
-const pill = (s: string): React.CSSProperties => {
-  const m: Record<string, [string, string]> = { open: ["#fff3df", "#b9770e"], in_progress: ["#E6F5ED", "#00994D"], resolved: ["#e6f6ec", "#1f9d57"] };
-  const [bg, fg] = m[s] || ["#eef2f6", "#67788a"];
-  return { background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, textTransform: "capitalize" };
-};
 const th: React.CSSProperties = { textAlign: "left", padding: "10px 14px", fontWeight: 600, color: "#8a97a6", fontSize: 11, textTransform: "uppercase" };
 const td: React.CSSProperties = { padding: "10px 14px", fontSize: 13, borderTop: "1px solid #f3f6f9" };
 

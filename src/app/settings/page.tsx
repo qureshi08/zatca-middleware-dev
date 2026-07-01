@@ -5,15 +5,9 @@ import { supabaseAdmin } from "@/lib/supabase";
 import {
   generateKeyForSettings, revokeApiKey, toggleAutoSubmit, retestConnection, provisionOdooAutomation,
 } from "@/lib/actions";
+import { card, hint, btn, ghostBtn as ghost, grayBtn as gray, copybox, banner } from "@/lib/ui";
 
-const card: React.CSSProperties = { background: "#fff", border: "1px solid #e3e8ef", borderRadius: 10, padding: "18px 20px", marginBottom: 14 };
-const hint: React.CSSProperties = { fontSize: 11.5, color: "#8a97a6", margin: "0 0 4px" };
-const btn: React.CSSProperties = { background: "#00994D", color: "#fff", border: "none", padding: "9px 16px", borderRadius: 7, fontSize: 13, fontWeight: 500, cursor: "pointer", textDecoration: "none", display: "inline-block" };
-const ghost: React.CSSProperties = { ...btn, background: "#fff", color: "#00994D", border: "1px solid #00994D" };
-const gray: React.CSSProperties = { ...btn, background: "#eef2f6", color: "#445" };
 const danger: React.CSSProperties = { ...btn, background: "#fff", color: "#c0392b", border: "1px solid #e3b4ab", padding: "5px 12px", fontSize: 12 };
-const copybox: React.CSSProperties = { background: "#0d1f15", color: "#cfe3f5", padding: "9px 12px", borderRadius: 7, fontFamily: "Consolas,monospace", fontSize: 12, wordBreak: "break-all", margin: "6px 0" };
-const banner = (bg: string, br: string, fg: string): React.CSSProperties => ({ background: bg, border: `1px solid ${br}`, color: fg, padding: "10px 14px", borderRadius: 8, fontSize: 13, marginBottom: 12 });
 const pill = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: 0.3 });
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ newkey?: string; msg?: string; err?: string }> }) {
