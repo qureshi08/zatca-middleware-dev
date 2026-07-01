@@ -41,6 +41,7 @@ export const ghostBtn: CSSProperties = { ...btn, background: "#fff", color: cbt.
 export const grayBtn: CSSProperties = { ...btn, background: "#eef2f6", color: "#445" };
 
 export const copybox: CSSProperties = { background: "#0d1f15", color: "#cfe3f5", padding: "9px 12px", borderRadius: 7, fontFamily: "var(--font-mono), Consolas, monospace", fontSize: 12, wordBreak: "break-all", margin: "6px 0" };
+export const codeBox: CSSProperties = { background: "#0d1f15", color: "#a8e6c0", padding: "12px 14px", borderRadius: 8, fontFamily: "var(--font-mono), Consolas, monospace", fontSize: 11.5, whiteSpace: "pre", overflowX: "auto", margin: "6px 0", lineHeight: 1.5 };
 
 /** Coloured message banner. */
 export const banner = (bg: string, br: string, fg: string): CSSProperties => ({ background: bg, border: `1px solid ${br}`, color: fg, padding: "10px 14px", borderRadius: 8, fontSize: 13, marginBottom: 14 });
