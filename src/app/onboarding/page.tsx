@@ -174,7 +174,9 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
                 <Link href="/invoices" style={ghost}>View invoices</Link>
                 <Link href="/" style={gray}>Dashboard</Link>
               </div>
-              <p style={{ ...hint, marginTop: 14 }}>Final step <b>in {integration === "odoo" ? "Odoo" : "Zoho"}</b>: ensure the {integration === "odoo" ? "Server Action + Automated Action" : "workflow webhook"} is set up — see <Link href="/onboarding?step=3">step 3</Link>.</p>
+              {integration === "custom"
+                ? <p style={{ ...hint, marginTop: 14 }}>You&apos;re set up. Build &amp; test your integration on the <Link href="/api-docs">Developer API</Link> page (live tester, docs, Postman).</p>
+                : <p style={{ ...hint, marginTop: 14 }}>Final step <b>in {integration === "odoo" ? "Odoo" : "Zoho"}</b>: ensure the {integration === "odoo" ? "Server Action + Automated Action" : "workflow webhook"} is set up — see <Link href="/onboarding?step=3">step 3</Link>.</p>}
             </div>
           ) : (
             <div style={card}>
