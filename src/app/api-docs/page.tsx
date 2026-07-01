@@ -77,7 +77,10 @@ export default async function ApiDocsPage() {
   return (
     <div style={{ padding: "28px 32px", maxWidth: 900 }}>
       <h1 style={pageTitle}>Developer API</h1>
-      <p style={pageSubtitle}>Clear invoices with ZATCA straight from your own software — one authenticated call. {live ? <b style={{ color: cbt.success }}>You&apos;re Live.</b> : <>You&apos;re in <b style={{ color: "#8a5a00" }}>Demo</b> (simulation).</>}</p>
+      <p style={pageSubtitle}>Your ongoing workspace for calling our API from your own software — reference, live tester, and Postman. {live ? <b style={{ color: cbt.success }}>You&apos;re Live.</b> : <>You&apos;re in <b style={{ color: "#8a5a00" }}>Demo</b> (simulation).</>}</p>
+      <div style={{ ...card, background: cbt.primaryMuted, border: `1px solid #b7e0c8`, fontSize: 12.5, color: "#155a3a" }}>
+        <b>How this fits together:</b> one-time account setup (profile → ZATCA onboarding → API key) happens in <Link href="/onboarding" style={{ color: cbt.primaryDark, fontWeight: 700 }}>Onboarding</Link>. This page is where you build and test <em>after</em> that. The checklist below shows what&apos;s left.
+      </div>
 
       {/* JOURNEY / PREREQUISITES */}
       <div style={card}>
